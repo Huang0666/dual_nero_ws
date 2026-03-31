@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: dual_nero_description
+    relative_path: urdf/dual_nero_description.xacro
+  srdf:
+    relative_path: config/dual_nero_description.srdf
+  package_settings:
+    author_name: yang-hrs
+    author_email: 15138756873@163.com
+    generated_timestamp: 1774856199

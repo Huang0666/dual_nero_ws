@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<robot name="dual_nero_description" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 引入单臂宏 -->
+  <xacro:include filename="$(find dual_nero_description)/urdf/nero_single_arm_macro.xacro"/>
+
+  <!-- 颜色材质 -->
+  <material name="blue">
+    <color rgba="0.2 0.4 0.9 1.0"/>
+  </material>
+
+  <material name="gray">
+    <color rgba="0.6 0.6 0.6 1.0"/>
+  </material>
+
+  <material name="silver">
+    <color rgba="0.8 0.8 0.8 1.0"/>
+  </material>
+
+  <!-- 世界坐标 -->
+  <link name="world"/>
+
+  <!-- 底座 -->
+  <link name="dual_base_plate">
+    <visual>
+      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.20 0.08 0.04"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.20 0.08 0.04"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="world_to_dual_base_plate" type="fixed">
+    <parent link="world"/>
+    <child link="dual_base_plate"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- 立柱 -->
+  <link name="dual_column">
+    <visual>
+      <origin xyz="0 0 0.75" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.04 0.04 1.50"/>
+      </geometry>
+      <material name="gray"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.75" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.04 0.04 1.50"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="dual_base_plate_to_column" type="fixed">
+    <parent link="dual_base_plate"/>
+    <child link="dual_column"/>
+    <origin xyz="0 0 0.04" rpy="0 0 0"/>
+  </joint>
+
+  <!-- 横梁 -->
+  <link name="dual_crossbar">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.34 0.05 0.05"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.34 0.05 0.05"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="dual_column_to_crossbar" type="fixed">
+    <parent link="dual_column"/>
+    <child link="dual_crossbar"/>
+    <origin xyz="0 0 1.50" rpy="0 0 0"/>
+  </joint>
+
+  <!-- 右臂 -->
+  <xacro:nero_single_arm
+      prefix="right_"
+      parent="dual_crossbar"
+      xyz="-0.145 0 0"
+      rpy="0 -1.5708 0"/>
+
+  <!-- 左臂 -->
+  <xacro:nero_single_arm
+      prefix="left_"
+      parent="dual_crossbar"
+      xyz="0.145 0 0"
+      rpy="0 -1.5708 3.14159"/>
+
+</robot>
