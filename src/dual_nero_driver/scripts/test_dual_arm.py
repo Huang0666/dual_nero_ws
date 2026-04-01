@@ -7,9 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from dual_nero_driver.dual_arm_manager import DualArmManager
-from dual_nero_driver.nero_arm import NeroArm
-from dual_nero_driver.pyagx_backend import PyAgxBackend
+from dual_nero_driver.factories import build_dual_arm_manager_from_file
 from dual_nero_driver.utils import (
     build_small_offset_target,
     dump_json,
@@ -56,27 +54,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    manager = build_dual_arm_manager_from_file(args.config)
     left_config, right_config = load_dual_arm_config(args.config)
-    left_backend = PyAgxBackend(left_config)
-    right_backend = PyAgxBackend(right_config)
-
-    left_arm = NeroArm(
-        arm_name=left_config.name,
-        side=left_config.side,
-        backend=left_backend,
-        joint_names=left_config.joint_names,
-        max_speed_percent=left_config.max_speed_percent,
-        joint_position_limits=left_config.joint_position_limits,
-    )
-    right_arm = NeroArm(
-        arm_name=right_config.name,
-        side=right_config.side,
-        backend=right_backend,
-        joint_names=right_config.joint_names,
-        max_speed_percent=right_config.max_speed_percent,
-        joint_position_limits=right_config.joint_position_limits,
-    )
-    manager = DualArmManager(left_arm=left_arm, right_arm=right_arm)
 
     try:
         manager.connect_all()
@@ -125,11 +104,11 @@ def main() -> int:
         except Exception:
             pass
         try:
-            left_backend.close()
+            manager.left_arm.backend.close()
         except Exception:
             pass
         try:
-            right_backend.close()
+            manager.right_arm.backend.close()
         except Exception:
             pass
 

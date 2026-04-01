@@ -7,8 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from dual_nero_driver.nero_arm import NeroArm
-from dual_nero_driver.pyagx_backend import PyAgxBackend
+from dual_nero_driver.factories import build_single_arm_from_file
 from dual_nero_driver.utils import (
     build_small_offset_target,
     dump_json,
@@ -51,20 +50,13 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    arm = build_single_arm_from_file(args.config, "right")
     _, right_config = load_dual_arm_config(args.config)
-    backend = PyAgxBackend(right_config)
-    arm = NeroArm(
-        arm_name=right_config.name,
-        side=right_config.side,
-        backend=backend,
-        joint_names=right_config.joint_names,
-        max_speed_percent=right_config.max_speed_percent,
-        joint_position_limits=right_config.joint_position_limits,
-    )
+    timeout_sec = right_config.pyagx.timeout
 
     try:
         arm.connect()
-        arm.enable_all(timeout_sec=right_config.pyagx.timeout)
+        arm.enable_all(timeout_sec=timeout_sec)
 
         before = arm.get_joint_state_snapshot().as_dict()
         print("Right arm snapshot:")
@@ -95,7 +87,7 @@ def main() -> int:
         except Exception:
             pass
         try:
-            backend.close()
+            arm.backend.close()
         except Exception:
             pass
 

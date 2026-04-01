@@ -1,0 +1,7 @@
+real_execution:
+  hardware_config: ""
+  allow_motion: false
+  enable_on_start: false
+  publish_rate_hz: 50.0
+  with_moveit: true
+  with_rviz: false

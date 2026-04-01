@@ -7,6 +7,7 @@ Current scope:
 - Adds a reusable driver backend abstraction for left and right arms.
 - Adds a `pyAgxArm` backend wrapper with explicit error handling.
 - Adds single-arm and dual-arm management classes.
+- Adds factory helpers so higher-level ROS packages can build `NeroArm` and `DualArmManager` from one shared YAML config.
 - Adds an example parameter file and minimal test scripts.
 
 This package does not do the following in this round:
@@ -39,6 +40,11 @@ Usage examples:
   - `python src/dual_nero_driver/scripts/test_right_arm.py --config src/dual_nero_driver/config/arm_params.example.yaml`
 - Dual arm read-only check:
   - `python src/dual_nero_driver/scripts/test_dual_arm.py --config src/dual_nero_driver/config/arm_params.example.yaml`
+
+Factory helpers for higher-level packages:
+
+- `build_single_arm_from_file(config_path, side)`
+- `build_dual_arm_manager_from_file(config_path)`
 
 Motion safety defaults:
 

@@ -2,100 +2,103 @@
 
 ## 仓库定位
 
-当前仓库是一个“双臂模型 + MoveIt demo”工作区，不是真机执行工作区。
-
-当前能力分层：
+当前仓库已经不是单纯的“双臂模型 + MoveIt demo”工作区，而是一个分层明确的工程：
 
 - `display`：已完成
 - `planning_demo`：已完成
-- `real_hardware_execution`：未完成
+- `real_hardware_execution`：已完成（bridge v1）
+
+当前三层对应关系：
+
+- `display`
+  - 包：[src/dual_nero_description](F:\github\dual_nero_ws\src\dual_nero_description)
+  - 作用：模型显示、TF 可视化、RViz 纯显示
+- `planning_demo`
+  - 包：[src/dual_nero_moveit_config](F:\github\dual_nero_ws\src\dual_nero_moveit_config)
+  - 作用：MoveIt 规划 demo、fake `ros2_control`
+- `real_hardware_execution`
+  - 包：[src/dual_nero_driver](F:\github\dual_nero_ws\src\dual_nero_driver)、[src/dual_nero_bridge](F:\github\dual_nero_ws\src\dual_nero_bridge)、[src/dual_nero_bringup](F:\github\dual_nero_ws\src\dual_nero_bringup)
+  - 作用：真实 joint state 回读、真实关节命令下发、MoveIt 可对接的最小真实执行入口
 
 ## 仓库结构图
 
 ```text
 dual_nero_ws/
 |-- README.md
+|-- docs/
+|   |-- project_baseline.md
+|   |-- p1_driver_contract.md
+|   `-- p1_execution_report.md
 `-- src/
     |-- dual_nero_description/
-    |   |-- launch/
-    |   |   `-- display_dual_urdf.launch.py
-    |   |-- meshes/
-    |   |   |-- *.STL / *.dae
-    |   |-- rviz/
-    |   |   `-- dual_nero.rviz
-    |   |-- urdf/
-    |   |   |-- dual_nero_description.xacro
-    |   |   `-- nero_single_arm_macro.xacro
-    |   |-- frames_*.gv / frames_*.pdf
-    |   |-- CMakeLists.txt
-    |   `-- package.xml
-    `-- dual_nero_moveit_config/
-        |-- config/
-        |   |-- dual_nero_description.srdf
-        |   |-- dual_nero_description.urdf.xacro
-        |   |-- dual_nero_description.ros2_control.xacro
-        |   |-- initial_positions.yaml
-        |   |-- joint_limits.yaml
-        |   |-- kinematics.yaml
-        |   |-- moveit.rviz
-        |   |-- moveit_controllers.yaml
-        |   |-- ros2_controllers.yaml
-        |   `-- sensors_3d.yaml
-        |-- launch/
-        |   |-- demo.launch.py
-        |   |-- move_group.launch.py
-        |   |-- moveit_rviz.launch.py
-        |   |-- rsp.launch.py
-        |   |-- spawn_controllers.launch.py
-        |   `-- other generated MoveIt launch files
-        |-- .setup_assistant
-        |-- CMakeLists.txt
-        `-- package.xml
+    |-- dual_nero_moveit_config/
+    |-- dual_nero_driver/
+    |-- dual_nero_bridge/
+    `-- dual_nero_bringup/
 ```
 
 ## 已完成 / 未完成
 
 ### 已完成
 
-- 双臂 URDF/Xacro 已存在，左右臂统一使用 `left_` / `right_` 前缀。
-- RViz 纯显示启动链已存在，可直接查看模型。
-- MoveIt 的 SRDF、运动学、控制器映射、demo launch 已存在。
-- fake `ros2_control` 已接入，足以支撑规划 demo 和控制器连线。
-- 描述包中的 TF 主干已经采用 `world -> dual_base_plate -> dual_column -> dual_crossbar -> ...`。
+- 双臂 URDF/Xacro、mesh、RViz 显示链已完成。
+- MoveIt 的 SRDF、运动学、controllers 映射和 demo 启动链已完成。
+- `dual_nero_driver` 已完成第一版 non-invasive backend，包括：
+  - `pyAgxArm` 后端抽象
+  - 单臂封装
+  - 双臂管理器
+  - 参数模板和最小测试脚本
+- `dual_nero_bridge` 已完成第一版真实执行桥，包括：
+  - 真实 `/joint_states`
+  - `/left_arm_controller/follow_joint_trajectory`
+  - `/right_arm_controller/follow_joint_trajectory`
+  - `/left_arm_controller/joint_command`
+  - `/right_arm_controller/joint_command`
+  - `/dual_arms/joint_command`
+- `dual_nero_bringup` 已完成第一版真机入口：
+  - `real_hardware.launch.py`
+  - 默认安全空闲模式
+  - 可选带 `move_group` / RViz 的真实执行入口
 
 ### 未完成
 
-- 还没有真机硬件包。
-- 还没有自定义 `hardware_interface::SystemInterface` 实现。
-- 还没有现场总线、串口、EtherCAT、CAN 或厂商驱动接入。
-- 还没有 bringup、标定、诊断、执行类包。
-- 还没有有效的 TF 运行验证产物；`frames_*.gv` 不能作为当前可运行证据。
+- native `ros2_control` C++ hardware plugin
+- 真正的 `controller_manager` / `joint_state_broadcaster` 真硬件链
+- 严格实时轨迹执行与控制周期保证
+- 更完善的 diagnostics / calibration / fault recovery
+- 更完整的急停链、通信异常恢复与同步误差补偿
 
-### 占位 / 模板内容
+### 占位 / 仍保留的 demo 组件
 
-- `dual_nero_moveit_config/config/dual_nero_description.ros2_control.xacro` 仍使用 `mock_components/GenericSystem`。
-- `dual_nero_moveit_config/config/sensors_3d.yaml` 目前明确保持为空，等待真实 3D 传感器接入。
-- `dual_nero_moveit_config` 仍然保留了 MoveIt Setup Assistant 生成包的结构，只是仓库定位已在此文档中明确。
+- [src/dual_nero_moveit_config/config/dual_nero_description.ros2_control.xacro](F:\github\dual_nero_ws\src\dual_nero_moveit_config\config\dual_nero_description.ros2_control.xacro) 仍使用 `mock_components/GenericSystem`
+- [src/dual_nero_moveit_config/launch/demo.launch.py](F:\github\dual_nero_ws\src\dual_nero_moveit_config\launch\demo.launch.py) 仍然只代表 `planning_demo`
+- 当前 bridge 的 `FollowJointTrajectory` 是执行适配层，不是原生 `ros2_control` controller
 
 ## 命名规范
 
-后续开发默认冻结以下命名，不再引入第二套同义命名。
+后续开发继续冻结以下命名，不再引入第二套语义等价名字。
 
 ### 关节命名
 
-- 左臂：`left_joint1` 到 `left_joint7`
-- 右臂：`right_joint1` 到 `right_joint7`
+- `left_joint1` 到 `left_joint7`
+- `right_joint1` 到 `right_joint7`
 
 ### 连杆命名
 
-- 根与结构件：`world`、`dual_base_plate`、`dual_column`、`dual_crossbar`
-- 左臂连杆：`left_base_link`、`left_link1` 到 `left_link7`、`left_end_effector`
-- 右臂连杆：`right_base_link`、`right_link1` 到 `right_link7`、`right_end_effector`
+- `world`
+- `dual_base_plate`
+- `dual_column`
+- `dual_crossbar`
+- `left_base_link` / `right_base_link`
+- `left_link1..7` / `right_link1..7`
+- `left_end_effector` / `right_end_effector`
 
 ### 固定关节命名
 
-- 安装固定关节：`left_mount_joint`、`right_mount_joint`
-- 末端固定关节：`left_end_effector_joint`、`right_end_effector_joint`
+- `left_mount_joint`
+- `right_mount_joint`
+- `left_end_effector_joint`
+- `right_end_effector_joint`
 
 ### 规划组命名
 
@@ -111,28 +114,13 @@ dual_nero_ws/
 
 ### TF 命名
 
-- 权威 TF 主干：`world -> dual_base_plate -> dual_column -> dual_crossbar`
-- 每条手臂从 `{side}_base_link` 继续向下展开
-- 新增 frame 时必须继续沿用同一前缀体系，禁止再引入别名根节点
+- 权威主干：`world -> dual_base_plate -> dual_column -> dual_crossbar`
+- 每条机械臂从 `{side}_base_link` 向下展开
 
-### 禁止引入的别名
-
-禁止新增：
+### 禁止新增的别名
 
 - `l_` / `r_`
 - `arm_left` / `arm_right`
 - `leftarm` / `rightarm`
-- 同一条手臂、关节、控制器、topic、namespace 的第二套命名体系
-
-### 后续真机阶段的 namespace 规则
-
-未来新增的硬件侧 topic、action、service、namespace 继续统一使用：
-
-- `left_arm_*`
-- `right_arm_*`
-
-## 验证规则
-
-- 新功能提交时，必须声明自己属于 `display`、`planning_demo`、`real_hardware_execution` 中的哪一层。
-- URDF 关节名、SRDF 规划组、控制器 YAML 必须保持一一对应。
-- 未来的真机支持必须进入新的 bringup/hardware 包，而不是悄悄覆盖当前 fake demo 配置。
+- `both_arms`
+- 任意与 `left_arm`、`right_arm`、`dual_arms` 等价的第二套 group / controller / topic / namespace 名字
