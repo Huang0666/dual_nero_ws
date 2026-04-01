@@ -4,7 +4,7 @@
   <name>dual_nero_moveit_config</name>
   <version>0.3.0</version>
   <description>
-     An automatically generated package with all the configuration and launch files for using the dual_nero_description with the MoveIt Motion Planning Framework
+     MoveIt planning-demo configuration for the dual-arm NERO robot, including fake ros2_control and RViz integration.
   </description>
   <maintainer email="15138756873@163.com">yang-hrs</maintainer>
 

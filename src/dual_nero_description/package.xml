@@ -2,8 +2,8 @@
 <package format="3">
   <name>dual_nero_description</name>
   <version>0.0.1</version>
-  <description>Dual-arm NERO description package generated from the single-arm nero_description model.</description>
-  <maintainer email="user@example.com">User</maintainer>
+  <description>URDF, Xacro, meshes, and RViz assets for the dual-arm NERO robot.</description>
+  <maintainer email="15138756873@163.com">yang-hrs</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

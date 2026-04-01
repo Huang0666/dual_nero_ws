@@ -12,11 +12,11 @@
     <group name="left_arm">
         <joint name="left_joint1"/>
         <joint name="left_joint2"/>
-        <joint name="left_joint7"/>
-        <joint name="left_joint6"/>
-        <joint name="left_joint5"/>
-        <joint name="left_joint4"/>
         <joint name="left_joint3"/>
+        <joint name="left_joint4"/>
+        <joint name="left_joint5"/>
+        <joint name="left_joint6"/>
+        <joint name="left_joint7"/>
     </group>
     <group name="right_arm">
         <joint name="right_joint1"/>
@@ -38,8 +38,8 @@
         <joint name="right_joint1"/>
         <joint name="right_joint2"/>
         <joint name="right_joint3"/>
-        <joint name="right_joint5"/>
         <joint name="right_joint4"/>
+        <joint name="right_joint5"/>
         <joint name="right_joint6"/>
         <joint name="right_joint7"/>
     </group>
@@ -109,6 +109,8 @@
         <joint name="right_joint7" value="0"/>
     </group_state>
     <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
+    <!-- The description package defines the authoritative TF trunk as
+         world -> dual_base_plate -> dual_column -> dual_crossbar -> arms. -->
     <virtual_joint name="world_joint" type="fixed" parent_frame="world" child_link="world"/>
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="dual_base_plate" link2="dual_column" reason="Adjacent"/>
