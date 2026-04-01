@@ -1,0 +1,59 @@
+left_arm:
+  name: left_arm
+  side: left
+  can:
+    channel: can0
+    interface: socketcan
+    bitrate: 1000000
+  pyagx:
+    enable_check_can: true
+    auto_connect: false
+    timeout: 5.0
+  joint_names:
+    - left_joint1
+    - left_joint2
+    - left_joint3
+    - left_joint4
+    - left_joint5
+    - left_joint6
+    - left_joint7
+  max_speed_percent: 10.0
+  dry_run: true
+  joint_position_limits:
+    left_joint1: {lower: -2.7, upper: 2.7}
+    left_joint2: {lower: -1.74, upper: 1.74}
+    left_joint3: {lower: -2.75, upper: 2.75}
+    left_joint4: {lower: -1.01, upper: 2.14}
+    left_joint5: {lower: -2.75, upper: 2.75}
+    left_joint6: {lower: -0.73, upper: 0.95}
+    left_joint7: {lower: -1.57, upper: 1.57}
+
+right_arm:
+  name: right_arm
+  side: right
+  can:
+    channel: can1
+    interface: socketcan
+    bitrate: 1000000
+  pyagx:
+    enable_check_can: true
+    auto_connect: false
+    timeout: 5.0
+  joint_names:
+    - right_joint1
+    - right_joint2
+    - right_joint3
+    - right_joint4
+    - right_joint5
+    - right_joint6
+    - right_joint7
+  max_speed_percent: 10.0
+  dry_run: true
+  joint_position_limits:
+    right_joint1: {lower: -2.7, upper: 2.7}
+    right_joint2: {lower: -1.74, upper: 1.74}
+    right_joint3: {lower: -2.75, upper: 2.75}
+    right_joint4: {lower: -1.01, upper: 2.14}
+    right_joint5: {lower: -2.75, upper: 2.75}
+    right_joint6: {lower: -0.73, upper: 0.95}
+    right_joint7: {lower: -1.57, upper: 1.57}
