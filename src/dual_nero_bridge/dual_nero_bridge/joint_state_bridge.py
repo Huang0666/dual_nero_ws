@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from sensor_msgs.msg import JointState
 
+from .logging_utils import log_degraded, log_state
 from .runtime import DualNeroBridgeRuntime
 
 
@@ -31,9 +32,10 @@ class JointStateBridge:
             if velocities is not None:
                 msg.velocity = velocities
             elif not self._velocity_warning_emitted:
-                self._node.get_logger().info(
-                    "dual_nero_bridge: backend does not provide joint velocities; "
-                    "publishing /joint_states without velocity values."
+                log_state(
+                    self._node.get_logger(),
+                    "joint_states",
+                    "backend does not provide joint velocities; publishing without velocity values.",
                 )
                 self._velocity_warning_emitted = True
             self._publisher.publish(msg)
@@ -41,7 +43,9 @@ class JointStateBridge:
         except Exception as exc:
             error_text = str(exc)
             if error_text != self._last_error:
-                self._node.get_logger().error(
-                    f"Failed to publish /joint_states from real hardware: {error_text}"
+                log_degraded(
+                    self._node.get_logger(),
+                    "joint_states",
+                    f"cannot publish full 14-joint state contract: {error_text}",
                 )
                 self._last_error = error_text

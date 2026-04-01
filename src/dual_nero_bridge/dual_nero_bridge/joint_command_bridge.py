@@ -4,6 +4,8 @@ from trajectory_msgs.msg import JointTrajectory
 
 from dual_nero_driver.safety import ensure_float_list, expected_joint_names
 
+from .errors import BridgeArmUnavailableError, BridgeMotionRejectedError
+from .logging_utils import log_reject
 from .runtime import DualNeroBridgeRuntime
 
 
@@ -34,48 +36,34 @@ class JointCommandBridge:
         )
 
     def _handle_left_command(self, msg: JointTrajectory) -> None:
-        try:
-            point = self._extract_single_point(
-                msg,
-                expected_names=self._left_joint_names,
-                label="left_arm_controller/joint_command",
-            )
-            target = ensure_float_list(
-                point.positions,
-                expected_len=len(self._left_joint_names),
-                label="left_arm_controller target",
-            )
-            self._runtime.move_left(target, wait=False)
-        except Exception as exc:
-            self._node.get_logger().error(f"Rejected left arm command: {exc}")
+        self._handle_single_arm_command(
+            msg,
+            expected_names=self._left_joint_names,
+            source="left_arm_controller",
+            move_callback=self._runtime.move_left,
+        )
 
     def _handle_right_command(self, msg: JointTrajectory) -> None:
-        try:
-            point = self._extract_single_point(
-                msg,
-                expected_names=self._right_joint_names,
-                label="right_arm_controller/joint_command",
-            )
-            target = ensure_float_list(
-                point.positions,
-                expected_len=len(self._right_joint_names),
-                label="right_arm_controller target",
-            )
-            self._runtime.move_right(target, wait=False)
-        except Exception as exc:
-            self._node.get_logger().error(f"Rejected right arm command: {exc}")
+        self._handle_single_arm_command(
+            msg,
+            expected_names=self._right_joint_names,
+            source="right_arm_controller",
+            move_callback=self._runtime.move_right,
+        )
 
     def _handle_dual_command(self, msg: JointTrajectory) -> None:
+        source = "dual_arms"
         try:
+            self._runtime.require_dual_motion_ready()
             point = self._extract_single_point(
                 msg,
                 expected_names=self._dual_joint_names,
-                label="dual_arms/joint_command",
+                label=f"{source}/joint_command",
             )
             target = ensure_float_list(
                 point.positions,
                 expected_len=len(self._dual_joint_names),
-                label="dual_arms target",
+                label=f"{source} target",
             )
             left_count = len(self._left_joint_names)
             self._runtime.move_both(
@@ -83,8 +71,37 @@ class JointCommandBridge:
                 target[left_count:],
                 wait=False,
             )
+        except (BridgeMotionRejectedError, BridgeArmUnavailableError, ValueError) as exc:
+            log_reject(self._node.get_logger(), source, str(exc))
         except Exception as exc:
-            self._node.get_logger().error(f"Rejected dual arm command: {exc}")
+            log_reject(self._node.get_logger(), source, f"joint command failed: {exc}")
+
+    def _handle_single_arm_command(
+        self,
+        msg: JointTrajectory,
+        *,
+        expected_names: list[str],
+        source: str,
+        move_callback,
+    ) -> None:
+        side = "left" if source == "left_arm_controller" else "right"
+        try:
+            self._runtime.require_arm_ready_for_motion(side)
+            point = self._extract_single_point(
+                msg,
+                expected_names=expected_names,
+                label=f"{source}/joint_command",
+            )
+            target = ensure_float_list(
+                point.positions,
+                expected_len=len(expected_names),
+                label=f"{source} target",
+            )
+            move_callback(target, wait=False)
+        except (BridgeMotionRejectedError, BridgeArmUnavailableError, ValueError) as exc:
+            log_reject(self._node.get_logger(), source, str(exc))
+        except Exception as exc:
+            log_reject(self._node.get_logger(), source, f"joint command failed: {exc}")
 
     @staticmethod
     def _extract_single_point(

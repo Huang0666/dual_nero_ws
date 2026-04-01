@@ -2,7 +2,7 @@
 
 ## 目的
 
-本文档记录 `dual_nero_ws` 进入并完成 P1 后的驱动接入合同。
+本文档记录 `dual_nero_ws` 完成 P1 后的驱动接入合同。
 
 P1 已落地结果：
 
@@ -10,17 +10,17 @@ P1 已落地结果：
 - URDF / SRDF / controllers 一致性：PASS
 - group 命名唯一性：PASS
 - TF 主干口径唯一性：PASS
-- P1 真实执行链方案：**B 方案，真实执行 bridge**
+- P1 真机执行链方案：**B 方案，真实执行 bridge**
 
 ## 当前结论
 
 P1 已完成的真实执行链不是 native `ros2_control` hardware plugin，而是：
 
-- 以 [src/dual_nero_driver](F:\github\dual_nero_ws\src\dual_nero_driver) 作为唯一硬件后端
-- 以 [src/dual_nero_bridge](F:\github\dual_nero_ws\src\dual_nero_bridge) 作为 ROS 2 真实执行桥
-- 以 [src/dual_nero_bringup](F:\github\dual_nero_ws\src\dual_nero_bringup) 作为 operator-facing 入口
+- 以 [../src/dual_nero_driver](../src/dual_nero_driver) 作为唯一硬件后端
+- 以 [../src/dual_nero_bridge](../src/dual_nero_bridge) 作为 ROS 2 真实执行桥
+- 以 [../src/dual_nero_bringup](../src/dual_nero_bringup) 作为 operator-facing 入口
 
-这一实现仍然满足 P1 合同的核心要求：
+这一实现仍满足 P1 合同的核心要求：
 
 - 不破坏现有 `display`
 - 不破坏现有 `planning_demo`
@@ -67,19 +67,20 @@ P1 新增的真实执行入口如下：
 - `left_arm_controller` 与 `right_arm_controller` 继续使用 `FollowJointTrajectory`
 - action namespace 继续是 `follow_joint_trajectory`
 - 这是 bridge/shim，不是严格实时控制器
+- P1.1 当前明确只支持 **单点 trajectory goal**
 - `dual_arms` 不新增第二套 controller name；双臂同步入口通过直接命令 topic 和上层已有双臂规划语义衔接
 
 ## 与现有包的边界
 
-- [src/dual_nero_description](F:\github\dual_nero_ws\src\dual_nero_description)
+- [../src/dual_nero_description](../src/dual_nero_description)
   - 继续只负责 `display`
-- [src/dual_nero_moveit_config](F:\github\dual_nero_ws\src\dual_nero_moveit_config)
+- [../src/dual_nero_moveit_config](../src/dual_nero_moveit_config)
   - 继续只负责 `planning_demo`
-- [src/dual_nero_driver](F:\github\dual_nero_ws\src\dual_nero_driver)
+- [../src/dual_nero_driver](../src/dual_nero_driver)
   - 继续作为唯一 `pyAgxArm` 适配层
-- [src/dual_nero_bridge](F:\github\dual_nero_ws\src\dual_nero_bridge)
+- [../src/dual_nero_bridge](../src/dual_nero_bridge)
   - 负责真实执行桥
-- [src/dual_nero_bringup](F:\github\dual_nero_ws\src\dual_nero_bringup)
+- [../src/dual_nero_bringup](../src/dual_nero_bringup)
   - 负责真机入口和 operator 默认参数
 
 ## 限制与下一阶段

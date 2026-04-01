@@ -14,6 +14,7 @@ setup(
         (f"share/{package_name}", ["package.xml", "README.md"]),
         (f"share/{package_name}/config", glob("config/*.yaml")),
         (f"share/{package_name}/launch", glob("launch/*.py")),
+        (f"lib/{package_name}", glob("scripts/*.py")),
     ],
     install_requires=["setuptools", "PyYAML"],
     zip_safe=True,
