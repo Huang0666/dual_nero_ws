@@ -16,6 +16,7 @@
 - CAN 设备已激活
 - 硬件参数文件已准备：
   - `src/dual_nero_bridge/config/hardware_params.yaml`
+- 当前实机验证下，Nero 连接采用最小 `create_agx_arm_config(...)` 参数集合；扩展参数后续再逐项回归验证
 - 操作者确认当前机械臂周围环境安全
 - 最小动作测试前确认：
   - `allow_motion:=true`

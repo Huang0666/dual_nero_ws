@@ -64,14 +64,16 @@ class PyAgxBackend(ArmBackend):
             ) from _PYAGX_IMPORT_ERROR
 
         try:
+            # Current NERO hardware validation shows the stable minimum config set is:
+            # robot="nero", comm="can", channel, interface, bitrate.
+            # Optional create_agx_arm_config(...) arguments such as enable_check_can,
+            # auto_connect, and timeout are intentionally not passed here until they
+            # are individually re-validated on real hardware.
             cfg_kwargs = {
                 "robot": "nero",
                 "comm": "can",
                 "channel": self._config.can.channel,
                 "interface": self._config.can.interface,
-                "enable_check_can": self._config.pyagx.enable_check_can,
-                "auto_connect": self._config.pyagx.auto_connect,
-                "timeout": self._config.pyagx.timeout,
             }
             if self._config.can.bitrate is not None:
                 cfg_kwargs["bitrate"] = self._config.can.bitrate
