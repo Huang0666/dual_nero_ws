@@ -8,6 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from dual_nero_driver.factories import build_dual_arm_manager_from_file
+from dual_nero_driver.safety import find_joints_near_limits, find_joints_outside_limits
 from dual_nero_driver.utils import (
     build_small_offset_target,
     dump_json,
@@ -49,7 +50,55 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Wait for both arms to reach target joints.",
     )
+    parser.add_argument(
+        "--near-limit-margin",
+        type=float,
+        default=0.05,
+        help="Warn when a joint is within this distance of its configured limit.",
+    )
     return parser.parse_args()
+
+
+def _print_joint_positions(arm_label: str, joint_names: list[str], positions: list[float]) -> None:
+    print(f"{arm_label} current joint positions:")
+    for joint_name, joint_value in zip(joint_names, positions, strict=True):
+        print(f"  {joint_name}: {joint_value:.6f}")
+
+
+def _print_limit_warnings(arm_label: str, warnings: list) -> None:
+    if not warnings:
+        return
+
+    print(
+        f"{arm_label} joints close to configured limits "
+        f"(still legal, but motion margin is small):"
+    )
+    for warning in warnings:
+        assert warning.distance is not None
+        relation = "lower" if warning.relation == "near_lower" else "upper"
+        print(
+            "  "
+            f"{warning.joint_name}: current={warning.current:.6f}, "
+            f"lower={warning.lower}, upper={warning.upper}, "
+            f"near_{relation}_distance={warning.distance:.6f}"
+        )
+
+
+def _raise_precheck_failure(violations: list) -> None:
+    details = [
+        (
+            f"{violation.joint_name}: current={violation.current:.6f}, "
+            f"lower={violation.lower}, upper={violation.upper}"
+        )
+        for violation in violations
+    ]
+    detail_text = "\n".join(details)
+    raise RuntimeError(
+        "Current real joint positions are outside configured limits.\n"
+        f"{detail_text}\n"
+        "Please disable the robot, manually move the affected joints back into the "
+        "legal range, and then rerun test_dual_arm.py --execute."
+    )
 
 
 def main() -> int:
@@ -70,6 +119,49 @@ def main() -> int:
         if args.execute:
             left_current = before["left_arm"]["joint_positions"]
             right_current = before["right_arm"]["joint_positions"]
+            _print_joint_positions(
+                "left_arm",
+                left_config.joint_names,
+                left_current,
+            )
+            _print_joint_positions(
+                "right_arm",
+                right_config.joint_names,
+                right_current,
+            )
+
+            left_violations = find_joints_outside_limits(
+                left_config.joint_names,
+                left_current,
+                left_config.joint_position_limits,
+            )
+            right_violations = find_joints_outside_limits(
+                right_config.joint_names,
+                right_current,
+                right_config.joint_position_limits,
+            )
+            _print_limit_warnings(
+                "left_arm",
+                find_joints_near_limits(
+                    left_config.joint_names,
+                    left_current,
+                    left_config.joint_position_limits,
+                    margin=args.near_limit_margin,
+                ),
+            )
+            _print_limit_warnings(
+                "right_arm",
+                find_joints_near_limits(
+                    right_config.joint_names,
+                    right_current,
+                    right_config.joint_position_limits,
+                    margin=args.near_limit_margin,
+                ),
+            )
+
+            if left_violations or right_violations:
+                _raise_precheck_failure(left_violations + right_violations)
+
             left_target = (
                 parse_target_csv(args.left_target, label="left_arm target")
                 if args.left_target

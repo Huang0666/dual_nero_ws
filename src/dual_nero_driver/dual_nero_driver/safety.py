@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Iterable
 
 from .exceptions import SafetyError, ValidationError
@@ -7,6 +8,16 @@ from .types import JointLimit, Side
 
 
 EXPECTED_JOINT_COUNT = 7
+
+
+@dataclass(slots=True)
+class JointLimitStatus:
+    joint_name: str
+    current: float
+    lower: float | None
+    upper: float | None
+    relation: str
+    distance: float | None = None
 
 
 def expected_joint_names(side: Side) -> list[str]:
@@ -87,6 +98,95 @@ def validate_target_with_limits(
             )
 
     return target
+
+
+def find_joints_outside_limits(
+    joint_names: list[str],
+    positions: list[float],
+    joint_limits: dict[str, JointLimit] | None,
+) -> list[JointLimitStatus]:
+    if not joint_limits:
+        return []
+
+    violations: list[JointLimitStatus] = []
+    for joint_name, joint_value in zip(joint_names, positions, strict=True):
+        joint_limit = joint_limits.get(joint_name)
+        if joint_limit is None:
+            continue
+        if joint_limit.lower is not None and joint_value < joint_limit.lower:
+            violations.append(
+                JointLimitStatus(
+                    joint_name=joint_name,
+                    current=joint_value,
+                    lower=joint_limit.lower,
+                    upper=joint_limit.upper,
+                    relation="below_lower",
+                    distance=joint_limit.lower - joint_value,
+                )
+            )
+        elif joint_limit.upper is not None and joint_value > joint_limit.upper:
+            violations.append(
+                JointLimitStatus(
+                    joint_name=joint_name,
+                    current=joint_value,
+                    lower=joint_limit.lower,
+                    upper=joint_limit.upper,
+                    relation="above_upper",
+                    distance=joint_value - joint_limit.upper,
+                )
+            )
+
+    return violations
+
+
+def find_joints_near_limits(
+    joint_names: list[str],
+    positions: list[float],
+    joint_limits: dict[str, JointLimit] | None,
+    *,
+    margin: float = 0.05,
+) -> list[JointLimitStatus]:
+    if not joint_limits:
+        return []
+    if margin <= 0.0:
+        raise ValidationError(f"near-limit margin must be positive, got {margin}.")
+
+    warnings: list[JointLimitStatus] = []
+    for joint_name, joint_value in zip(joint_names, positions, strict=True):
+        joint_limit = joint_limits.get(joint_name)
+        if joint_limit is None:
+            continue
+
+        if joint_limit.lower is not None:
+            distance_to_lower = joint_value - joint_limit.lower
+            if 0.0 <= distance_to_lower <= margin:
+                warnings.append(
+                    JointLimitStatus(
+                        joint_name=joint_name,
+                        current=joint_value,
+                        lower=joint_limit.lower,
+                        upper=joint_limit.upper,
+                        relation="near_lower",
+                        distance=distance_to_lower,
+                    )
+                )
+                continue
+
+        if joint_limit.upper is not None:
+            distance_to_upper = joint_limit.upper - joint_value
+            if 0.0 <= distance_to_upper <= margin:
+                warnings.append(
+                    JointLimitStatus(
+                        joint_name=joint_name,
+                        current=joint_value,
+                        lower=joint_limit.lower,
+                        upper=joint_limit.upper,
+                        relation="near_upper",
+                        distance=distance_to_upper,
+                    )
+                )
+
+    return warnings
 
 
 def targets_within_tolerance(
