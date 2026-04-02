@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import time
 from typing import Any
 
@@ -30,6 +31,24 @@ class PyAgxBackend(ArmBackend):
         self._connected = False
         self._enabled = False
         self._dry_run_joint_positions = [0.0] * len(self._config.joint_names)
+        self._logger = logging.getLogger(f"dual_nero_driver.{self._config.name}")
+        self._normal_mode_was_called = False
+        self._last_enable_return: Any = None
+        self._last_enable_statuses: list[bool] | None = None
+
+    @property
+    def normal_mode_was_called(self) -> bool:
+        return self._normal_mode_was_called
+
+    @property
+    def last_enable_return(self) -> Any:
+        return self._last_enable_return
+
+    @property
+    def last_enable_statuses(self) -> list[bool] | None:
+        if self._last_enable_statuses is None:
+            return None
+        return list(self._last_enable_statuses)
 
     def connect(self) -> None:
         if self._connected:
@@ -74,6 +93,8 @@ class PyAgxBackend(ArmBackend):
                 raise BackendConnectionError(
                     f"{self._config.name}: pyAgxArm connect() returned False."
                 )
+            self._logger.debug("%s: connect() completed successfully", self._config.name)
+            self._set_normal_mode_if_available()
             self._connected = True
         except BackendConnectionError:
             raise
@@ -88,17 +109,28 @@ class PyAgxBackend(ArmBackend):
             self._enabled = True
             return
 
-        start = time.monotonic()
-        result = self._invoke("enable")
-        elapsed = time.monotonic() - start
-        if elapsed > timeout_sec:
-            raise BackendTimeoutError(
-                f"{self._config.name}: enable() exceeded timeout {timeout_sec:.2f}s."
+        deadline = time.monotonic() + timeout_sec
+        self._last_enable_return = None
+        self._last_enable_statuses = None
+        while time.monotonic() < deadline:
+            self._last_enable_return = self._invoke("enable")
+            self._last_enable_statuses = self._read_enable_statuses()
+            self._logger.debug(
+                "%s: enable() -> %r statuses -> %r",
+                self._config.name,
+                self._last_enable_return,
+                self._last_enable_statuses,
             )
-        if result is False:
-            raise BackendCommandError(f"{self._config.name}: enable() returned False.")
-        self._wait_until_enabled(timeout_sec)
-        self._enabled = True
+            if self._all_joints_enabled(self._last_enable_statuses):
+                self._enabled = True
+                return
+            time.sleep(0.05)
+
+        raise BackendTimeoutError(
+            f"{self._config.name}: joints were not all enabled within {timeout_sec:.2f}s; "
+            f"last_enable_return={self._last_enable_return!r}, "
+            f"last_statuses={self._last_enable_statuses!r}."
+        )
 
     def disable_all(self) -> None:
         if not self._connected:
@@ -270,27 +302,53 @@ class PyAgxBackend(ArmBackend):
                 f"{self._config.name}: backend is not connected yet."
             )
 
-    def _wait_until_enabled(self, timeout_sec: float) -> None:
+    def _set_normal_mode_if_available(self) -> None:
+        robot = self._require_robot()
+        set_normal_mode = getattr(robot, "set_normal_mode", None)
+        if not callable(set_normal_mode):
+            return
+        try:
+            self._logger.debug("%s: calling set_normal_mode()", self._config.name)
+            result = set_normal_mode()
+        except Exception as exc:
+            raise BackendConnectionError(
+                f"{self._config.name}: set_normal_mode() failed after connect: {exc}"
+            ) from exc
+        self._normal_mode_was_called = True
+        if result is False:
+            raise BackendConnectionError(
+                f"{self._config.name}: set_normal_mode() returned False after connect."
+            )
+        self._logger.debug("%s: set_normal_mode() completed successfully", self._config.name)
+
+    def _read_enable_statuses(self) -> list[bool] | None:
         robot = self._require_robot()
         status_method = getattr(robot, "get_joints_enable_status_list", None)
         if not callable(status_method):
-            return
+            raise BackendCommandError(
+                f"{self._config.name}: backend does not implement get_joints_enable_status_list()."
+            )
+        try:
+            statuses = status_method()
+        except Exception as exc:
+            raise BackendCommandError(
+                f"{self._config.name}: get_joints_enable_status_list() failed: {exc}"
+            ) from exc
+        if hasattr(statuses, "msg"):
+            statuses = statuses.msg
+        if statuses is None:
+            return None
+        if not isinstance(statuses, list):
+            raise BackendCommandError(
+                f"{self._config.name}: get_joints_enable_status_list() returned non-list {statuses!r}."
+            )
+        normalized_statuses = [bool(status) for status in statuses]
+        if len(normalized_statuses) != len(self._config.joint_names):
+            raise BackendCommandError(
+                f"{self._config.name}: expected {len(self._config.joint_names)} enable statuses, "
+                f"got {len(normalized_statuses)}."
+            )
+        return normalized_statuses
 
-        deadline = time.monotonic() + timeout_sec
-        while time.monotonic() < deadline:
-            try:
-                statuses = status_method()
-            except Exception as exc:
-                raise BackendCommandError(
-                    f"{self._config.name}: get_joints_enable_status_list() failed: {exc}"
-                ) from exc
-            if hasattr(statuses, "msg"):
-                statuses = statuses.msg
-            if isinstance(statuses, list) and len(statuses) == len(self._config.joint_names):
-                if all(bool(status) for status in statuses):
-                    return
-            time.sleep(0.05)
-
-        raise BackendTimeoutError(
-            f"{self._config.name}: joints were not all enabled within {timeout_sec:.2f}s."
-        )
+    def _all_joints_enabled(self, statuses: list[bool] | None) -> bool:
+        return bool(statuses) and all(statuses)
