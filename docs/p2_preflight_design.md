@@ -72,6 +72,11 @@
 - `preflight.moveit_joint_limits_path` 存在
 - bridge `hardware_params.yaml` 与 MoveIt `joint_limits.yaml` 的关节软限位完全一致
 
+说明：
+
+- `preflight.moveit_joint_limits_path` 允许作为 override
+- 若未配置，则 bringup 默认解析 `dual_nero_moveit_config/config/joint_limits.yaml`
+
 ## 正式执行入口
 
 当前已接入统一 preflight 的正式执行入口：

@@ -9,7 +9,7 @@ preflight:
   require_enabled: true
   require_dual_online: true
   require_dual_enabled: true
-  moveit_joint_limits_path: ../../dual_nero_moveit_config/config/joint_limits.yaml
+  moveit_joint_limits_path: ""
   scopes:
     left_arm: [left]
     right_arm: [right]

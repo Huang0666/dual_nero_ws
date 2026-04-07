@@ -47,7 +47,7 @@ bringup / launch 层不负责：
 - 即使 `preflight_enabled:=false`，以下检查仍然必须通过：
   - 配置文件路径存在
   - 左右臂 `can.channel` 存在
-  - MoveIt joint limits 路径存在
+  - 默认或 override 的 MoveIt joint limits 路径存在
   - bridge 与 MoveIt 关节限位一致
 
 ## 启动日志
@@ -80,7 +80,7 @@ bringup / launch 层不负责：
 - `right_arm.can.channel is missing`
   - bridge 硬件配置缺少右臂 channel
 - `preflight.moveit_joint_limits_path does not exist`
-  - preflight 配置中引用的 MoveIt 限位文件不存在
+  - preflight 配置中的 override 路径不存在，或默认的 `dual_nero_moveit_config/config/joint_limits.yaml` 不存在
 - `Bridge and MoveIt joint limits differ`
   - bridge 配置与 MoveIt 配置中的软限位不一致，必须先修正再启动
 

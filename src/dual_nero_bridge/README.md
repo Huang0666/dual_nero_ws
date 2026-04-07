@@ -105,6 +105,11 @@ config/preflight.yaml
 - `moveit_joint_limits_path`
 - `scopes`
 
+`moveit_joint_limits_path` 是可选 override：
+
+- 为空时，bringup 默认使用 `dual_nero_moveit_config/config/joint_limits.yaml`
+- 填了值时，启动期一致性校验优先使用该路径
+
 ## `preflight_enabled` 语义
 
 - `true`：启用运行时 preflight gate

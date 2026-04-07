@@ -18,6 +18,9 @@ def _load_defaults() -> dict:
 def _startup_checks(context, *_args, **_kwargs):
     hardware_config = Path(LaunchConfiguration("hardware_config").perform(context))
     preflight_config = Path(LaunchConfiguration("preflight_config_path").perform(context))
+    default_moveit_joint_limits = Path(
+        LaunchConfiguration("moveit_joint_limits_path").perform(context)
+    )
     preflight_enabled = LaunchConfiguration("preflight_enabled").perform(context)
     safety_mode = LaunchConfiguration("safety_mode").perform(context)
 
@@ -52,9 +55,7 @@ def _startup_checks(context, *_args, **_kwargs):
         preflight_config_data.get("moveit_joint_limits_path"),
     )
     if moveit_joint_limits_path is None:
-        raise RuntimeError(
-            "preflight.moveit_joint_limits_path is required for startup consistency checks."
-        )
+        moveit_joint_limits_path = default_moveit_joint_limits
     if not moveit_joint_limits_path.is_file():
         raise RuntimeError(
             f"preflight.moveit_joint_limits_path does not exist: {moveit_joint_limits_path}"
@@ -169,6 +170,9 @@ def generate_launch_description():
     preflight_config = PathJoinSubstitution(
         [FindPackageShare("dual_nero_bridge"), "config", "preflight.yaml"]
     )
+    moveit_joint_limits = PathJoinSubstitution(
+        [FindPackageShare("dual_nero_moveit_config"), "config", "joint_limits.yaml"]
+    )
     bridge_launch = PathJoinSubstitution(
         [FindPackageShare("dual_nero_bridge"), "launch", "real_hardware_bridge.launch.py"]
     )
@@ -218,6 +222,11 @@ def generate_launch_description():
                 "safety_mode",
                 default_value=str(defaults.get("safety_mode", "strict")),
                 description="Safety mode label exposed to the runtime preflight checker.",
+            ),
+            DeclareLaunchArgument(
+                "moveit_joint_limits_path",
+                default_value=moveit_joint_limits,
+                description="Default MoveIt joint limits file used for startup consistency checks.",
             ),
             DeclareLaunchArgument(
                 "with_moveit",
