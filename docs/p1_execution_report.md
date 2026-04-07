@@ -1,107 +1,131 @@
 # P1 Execution Report
 
-## 方案选择
+## 结论
 
-- 最终采用：**B 方案，真实执行 bridge**
-- 原因：
-  - 当前仓库可确认可复用的是 Python SDK `pyAgxArm`
-  - 当前仓库已存在 Python backend 包 `dual_nero_driver`
-  - 在缺少可确认可用的 NERO C++ SDK 的情况下，直接实现 C++ `ros2_control` `SystemInterface` 会落到不可维护的“C++ 嵌 Python SDK”方案
+P1 已完成并通过当前实机验证。
 
-## 当前仓库分层
+已完成项：
 
-- `display`
-  - `src/dual_nero_description/launch/display_dual_urdf.launch.py`
-- `planning_demo`
-  - `src/dual_nero_moveit_config/launch/demo.launch.py`
-- `real_hardware_execution`
-  - `src/dual_nero_bringup/launch/real_hardware.launch.py`
+- 左臂单臂 read-only 成功
+- 右臂单臂 read-only 成功
+- 双臂只读成功
+- `/joint_states` 14 joints 正常
+- 双臂最小动作成功
+- 左臂单点 action 成功
+- 右臂单点 action 成功
+- 双臂动作一致
 
-## P1.1 收口结果
+## 当前方案定位
 
-- `FollowJointTrajectory` 当前明确采用单点 goal 语义
-- 多点 goal 会在接收阶段被显式拒绝
-- bridge 的 degraded / reject / abort 语义已收口
-- 新增最小 action 客户端示例：
-  - `src/dual_nero_bridge/scripts/send_left_arm_goal.py`
-  - `src/dual_nero_bridge/scripts/send_right_arm_goal.py`
-- 新增冒烟验证模板：
-  - `docs/p1_smoke_test_report.md`
+- 当前采用：**B 方案，real-hardware bridge**
+- 当前不是 native C++ `ros2_control` hardware plugin
+- 当前推荐路线：
+  - 沿 bridge 方案继续做稳定化和工程化
+- 当前不建议立即切到 native plugin，原因是：
+  - 现有 bridge 已完成 P1 真机最小执行链
+  - 当前主要风险在稳定性、恢复、固定命名和日志，不在架构缺口
+  - 现在切架构会打断验证连续性，性价比低
 
-## P1.2 实机收口结果
+## 当前实机稳定配置
 
-- 左臂 read-only 已成功
-- `pyAgxArm` 当前按实机稳定最小参数集接入：
-  - `robot="nero"`
-  - `comm="can"`
-  - `channel`
-  - `interface`
-  - `bitrate`
-- `connect()` 后显式调用 `set_normal_mode()`
-- `enable_all()` 改为循环轮询 `enable()` + `get_joints_enable_status_list()`，直到 7 个关节全部 enabled 才算成功
+当前实机稳定的 `create_agx_arm_config(...)` 参数集为：
 
-## P1.3 收口结果
+- `robot="nero"`
+- `comm="can"`
+- `channel`
+- `interface`
+- `bitrate`
 
-- 双臂最小动作测试已成功
-- 首次执行失败的原因已确认：
-  - 右臂初始位姿超出当前配置限位
-- 处理方式：
-  - 机械臂失能
-  - 手动调整到合法位置
-  - 再次执行双臂最小动作测试
-- 复测结果：
-  - 双臂最小动作成功
-  - 机械臂发生微弱移动
+当前暂不传：
 
-### 本轮新增修复
+- `enable_check_can`
+- `auto_connect`
+- `timeout`
 
-- `src/dual_nero_moveit_config/config/joint_limits.yaml`
-  - 显式补齐 14 个 joint 的 `has_position_limits` / `min_position` / `max_position`
-  - 当前 position limits 与 URDF、bridge 配置保持一致
+已确认的运行时行为：
+
+- `connect()` 后必须显式调用 `set_normal_mode()`
+- `enable()` 需要轮询重试
+- `enable_all()` 以 7 个关节全部 enabled 为成功标准
+
+## 已确认问题与处理
+
+### 1. 右臂初始位姿超限
+
+- 首次双臂最小动作失败，根因是右臂初始位姿超出当前配置限位。
+- 当前处理方式：
+  - 先失能
+  - 手动调回合法区间
+  - 再重新执行测试
+- 当前状态：
+  - 已通过 limits 收口与执行前检查降低复发概率
+
+### 2. USB-CAN 映射错位
+
+- 现场已确认出现过左右臂映射错位。
+- 根因是 USB-CAN 枚举/插拔顺序导致 `can0` / `can1` 与物理左右臂不一致。
+- 当前处理方式：
+  - 测试前先确认映射
+  - 再运行 read-only、最小动作和 action
+- 当前建议：
+  - 后续为左右臂设备增加固定命名，例如 `udev`
+- 额外要求：
+  - 如果中途拔插 USB-CAN，需重启 `real_hardware.launch.py`
+
+## P1 Final Cleanup 收口结果
+
+### 1. 测试脚本 cleanup 行为统一
+
+以下脚本已统一支持 `--keep-enabled`：
+
+- `src/dual_nero_driver/scripts/test_left_arm.py`
+- `src/dual_nero_driver/scripts/test_right_arm.py`
 - `src/dual_nero_driver/scripts/test_dual_arm.py`
-  - 在 `--execute` 前打印当前左右臂 joint positions
-  - 执行前检查当前姿态是否超限
-  - 执行前检查哪些 joint 接近限位
-  - 如果当前姿态超限，报错信息会明确包含：
-    - joint 名称
-    - 当前值
-    - 下限
-    - 上限
-    - “先失能并手动调整到合法区间，再重新执行测试”的操作提示
-- `src/dual_nero_driver/dual_nero_driver/safety.py`
-  - 新增当前姿态越界检查
-  - 新增接近限位告警检查
 
-## 哪些已进入真机执行链
+默认行为：
 
-- 真实双臂 backend 复用链：`dual_nero_driver`
-- 真实 `/joint_states` 发布链：`dual_nero_bridge`
-- 左右臂 `FollowJointTrajectory` 真实执行入口：`dual_nero_bridge`
-- 双臂直接命令入口：`/dual_arms/joint_command`
-- operator-facing 真机入口：`dual_nero_bringup/real_hardware.launch.py`
-- 真机最小动作测试链：`src/dual_nero_driver/scripts/test_dual_arm.py --execute`
+- `stop`
+- `disable_all`
+- `close`
 
-## 当前 limits 收口口径
+`--keep-enabled` 行为：
 
-- URDF/xacro 是机械结构 limits 的原始定义
-- `src/dual_nero_bridge/config/hardware_params.yaml`
-  - 是当前 driver/runtime safety 实际读取的 limits 来源
-- `src/dual_nero_moveit_config/config/joint_limits.yaml`
-  - 已补齐为和 URDF/bridge 一致的显式 position limits
-- 当前运行时 safety 不直接读取 URDF 或 MoveIt YAML，仍以 `hardware_params.yaml` 为准
+- 仍执行 `stop`
+- 不自动 `disable_all`
+- 不主动把机械臂切回失能
+- 适合连续执行 `test + action`
 
-## 当前限制
+verbose 输出会明确打印：
 
-- bridge 仍不是 native `ros2_control` hardware plugin
-- 当前 `FollowJointTrajectory` 仅支持单点 goal
-- 不实现多点时间控制
-- 不实现 lazy enable
-- 不实现完整 diagnostics / calibration / recovery
-- 当前双臂最小动作测试依赖人工确认机械臂起始姿态处于合法区间
+- `cleanup mode: auto-disable`
+- `cleanup mode: keep-enabled`
 
-## 建议的下一步
+### 2. limits 与执行前检查已收口
 
-1. 完成右臂 read-only 与双臂 read-only 的现场记录补齐
-2. 在现场再跑一轮 `test_dual_arm.py --execute`，验证新的执行前限位预检查文案是否足够清晰
-3. 评估是否要把 `hardware_params.yaml` 继续作为唯一运行时 limits 源，并增加自动从 URDF 导出/比对的校验工具
-4. 如果后续继续保留 bridge，优先补故障恢复、enable 检测和更细化的同步控制
+- `hardware_params.yaml` 仍是运行时 safety 实际读取的 limits 来源
+- `joint_limits.yaml` 已显式补齐 position limits
+- `test_dual_arm.py --execute` 会在动作前检查当前姿态是否超限或接近限位
+
+## 当前已完成项清单
+
+- `dual_nero_driver` 已具备稳定的 Nero Python backend 第一版
+- `dual_nero_bridge` 已具备真实 joint state、单点 action 和最小执行桥
+- `dual_nero_bringup` 已具备真机启动入口
+- P1 所需读状态、最小动作、左右单点 action 均已跑通
+- 当前最小成功参数集、现场问题和 cleanup 行为已文档化
+
+## 当前仍未完成
+
+- native `ros2_control` C++ hardware plugin
+- 真正的 `controller_manager` / `joint_state_broadcaster` 真机链
+- 多点 trajectory 与严格时间控制
+- diagnostics / calibration / fault recovery
+- 固定 USB-CAN 命名与自动映射校验
+- 更完整的急停闭环与通信异常恢复
+
+## 下一阶段建议
+
+1. 完成 USB-CAN 固定命名，例如 `udev`
+2. 把当前姿态/限位检查前置到正式入口
+3. 增强 bridge/action 日志、fault、reconnect 和 recovery 策略
+4. 做重复性 smoke test，确认可复现性

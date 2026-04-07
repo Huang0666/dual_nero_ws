@@ -56,6 +56,16 @@ def parse_args() -> argparse.Namespace:
         default=0.05,
         help="Warn when a joint is within this distance of its configured limit.",
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print config and cleanup details for the dual-arm test flow.",
+    )
+    parser.add_argument(
+        "--keep-enabled",
+        action="store_true",
+        help="Keep both arms enabled after the test instead of auto-disabling in cleanup.",
+    )
     return parser.parse_args()
 
 
@@ -103,8 +113,25 @@ def _raise_precheck_failure(violations: list) -> None:
 
 def main() -> int:
     args = parse_args()
+    cleanup_mode = "keep-enabled" if args.keep_enabled else "auto-disable"
     manager = build_dual_arm_manager_from_file(args.config)
     left_config, right_config = load_dual_arm_config(args.config)
+
+    if args.verbose:
+        print(f"config_path: {Path(args.config).resolve()}")
+        print(
+            "left_arm_config: "
+            f"name={left_config.name}, side={left_config.side}, "
+            f"channel={left_config.can.channel}, interface={left_config.can.interface}, "
+            f"bitrate={left_config.can.bitrate}, dry_run={left_config.dry_run}"
+        )
+        print(
+            "right_arm_config: "
+            f"name={right_config.name}, side={right_config.side}, "
+            f"channel={right_config.can.channel}, interface={right_config.can.interface}, "
+            f"bitrate={right_config.can.bitrate}, dry_run={right_config.dry_run}"
+        )
+        print(f"cleanup mode: {cleanup_mode}")
 
     try:
         manager.connect_all()
@@ -191,10 +218,11 @@ def main() -> int:
             manager.stop_all()
         except Exception:
             pass
-        try:
-            manager.disable_all()
-        except Exception:
-            pass
+        if not args.keep_enabled:
+            try:
+                manager.disable_all()
+            except Exception:
+                pass
         try:
             manager.left_arm.backend.close()
         except Exception:

@@ -52,12 +52,18 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Print backend alignment/debug output for connect() and enable_all().",
     )
+    parser.add_argument(
+        "--keep-enabled",
+        action="store_true",
+        help="Keep the arm enabled after the test instead of auto-disabling in cleanup.",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     _configure_logging(verbose=args.verbose)
+    cleanup_mode = "keep-enabled" if args.keep_enabled else "auto-disable"
 
     arm = build_single_arm_from_file(args.config, "right")
     _, right_config = load_dual_arm_config(args.config)
@@ -72,6 +78,7 @@ def main() -> int:
             f"channel={right_config.can.channel}, interface={right_config.can.interface}, "
             f"bitrate={right_config.can.bitrate}, dry_run={right_config.dry_run}"
         )
+        print(f"cleanup mode: {cleanup_mode}")
 
     try:
         if args.verbose:
@@ -117,10 +124,11 @@ def main() -> int:
             arm.stop()
         except Exception:
             pass
-        try:
-            arm.disable_all()
-        except Exception:
-            pass
+        if not args.keep_enabled:
+            try:
+                arm.disable_all()
+            except Exception:
+                pass
         try:
             arm.backend.close()
         except Exception:

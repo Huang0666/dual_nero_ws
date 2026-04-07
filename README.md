@@ -1,41 +1,88 @@
 # dual_nero_ws
 
-`dual_nero_ws` 是一个面向 NERO 双臂机器人的 ROS 2 工作区。
+`dual_nero_ws` 是面向 NERO 双臂机器人的 ROS 2 工作区。
 
-当前仓库明确分成三层：
+当前仓库固定为三层结构：
 
 - `display`
-  - 包：[src/dual_nero_description](src/dual_nero_description)
+  - 包：`src/dual_nero_description`
   - 入口：`ros2 launch dual_nero_description display_dual_urdf.launch.py`
 - `planning_demo`
-  - 包：[src/dual_nero_moveit_config](src/dual_nero_moveit_config)
+  - 包：`src/dual_nero_moveit_config`
   - 入口：`ros2 launch dual_nero_moveit_config demo.launch.py`
 - `real_hardware_execution`
-  - 包：[src/dual_nero_driver](src/dual_nero_driver)、[src/dual_nero_bridge](src/dual_nero_bridge)、[src/dual_nero_bringup](src/dual_nero_bringup)
+  - 包：`src/dual_nero_driver`、`src/dual_nero_bridge`、`src/dual_nero_bringup`
   - 入口：`ros2 launch dual_nero_bringup real_hardware.launch.py`
 
-## 当前状态
+## 当前结论
 
-- 仓库已完成第一版 `real_hardware_execution`。
-- 当前采用 **B 方案 real-hardware bridge**，不是 native C++ `ros2_control` hardware plugin。
-- `pyAgxArm` 只通过 `dual_nero_driver` 使用，不在其它包中散落调用。
-- MoveIt 真实执行入口通过以下 action 暴露：
-  - `/left_arm_controller/follow_joint_trajectory`
-  - `/right_arm_controller/follow_joint_trajectory`
+- P1 已完成并通过当前实机验证。
+- 当前真实执行方案是 **bridge 方案**，不是 native C++ `ros2_control` hardware plugin。
+- `pyAgxArm` 已确认可用于 Nero 实机。
+- 当前推荐路线是继续沿 bridge 做稳定化和工程化，不建议立即切到 native plugin。
 
-## P1.1 收口结果
+## P1 已完成项
 
-- `FollowJointTrajectory` 当前采用 **方案 A**：
-  - 每个 goal 只支持 **1 个 trajectory point**
-  - 如果 `trajectory.points` 数量大于 1，会在 goal 校验阶段显式拒绝
-  - `time_from_start` 会做非负检查，但当前不实现多点时间语义
-- bridge 的失败语义已明确：
-  - 两臂都不可用时，节点启动失败并退出
-  - 单臂不可用时，进入 degraded mode
-  - 单臂命令只允许打到可用臂
-  - 双臂命令和完整 `/joint_states` 在单臂缺失时会被拒绝或停止发布
-  - `allow_motion=false` 时，topic/action 命令都会显式拒绝
-  - `enable_on_start=false` 时，bridge 不做 lazy enable，动作命令会显式拒绝
+- 左臂单臂 read-only 成功
+- 右臂单臂 read-only 成功
+- 双臂只读成功
+- `/joint_states` 14 joints 正常
+- 双臂最小动作成功
+- 左臂单点 action 成功
+- 右臂单点 action 成功
+- 双臂动作一致
+
+## 当前实机稳定配置
+
+当前 `create_agx_arm_config(...)` 的稳定做法是最小参数集：
+
+- `robot="nero"`
+- `comm="can"`
+- `channel`
+- `interface`
+- `bitrate`
+
+当前实机验证下，不传：
+
+- `enable_check_can`
+- `auto_connect`
+- `timeout`
+
+运行时已确认的行为：
+
+- `connect()` 后必须调用 `set_normal_mode()`
+- `enable()` 需要轮询重试，不能按一次返回值判失败
+- `enable_all()` 以 7 个关节全部 enabled 为成功标准
+
+## 已确认现场问题
+
+### 1. 右臂初始位姿超限
+
+- 首次双臂最小动作失败的根因是右臂初始位姿超出当前限位。
+- 当前处理方式是：
+  - 先失能
+  - 手动调回合法区间
+  - 再重新执行测试
+
+### 2. USB-CAN 映射错位
+
+- `can0` / `can1` 与物理左右臂可能因 USB-CAN 枚举和插拔顺序发生错位。
+- 现场曾出现“左命令驱右臂 / 右命令驱左臂”。
+- 当前仍使用 `can0/can1` 临时方案。
+- 后续建议是为左右臂准备固定命名，例如 `udev`。
+- 如果中途拔插 USB-CAN，建议重新确认映射，并重启 `real_hardware.launch.py` 后再继续测试。
+
+## 测试脚本当前行为
+
+- `test_left_arm.py`、`test_right_arm.py`、`test_dual_arm.py` 默认都会安全收尾：
+  - `stop`
+  - `disable_all`
+  - `close`
+- 如果要连续执行 `test + action`，建议显式传 `--keep-enabled`
+- `--keep-enabled` 模式下：
+  - 仍执行 `stop`
+  - 不自动 `disable_all`
+  - 不主动切回失能
 
 ## 冻结命名合同
 
@@ -44,31 +91,33 @@
 - controllers：`left_arm_controller`、`right_arm_controller`、`joint_state_broadcaster`
 - TF trunk：`world -> dual_base_plate -> dual_column -> dual_crossbar -> {left/right}_base_link -> ...`
 
-## 冒烟验证入口
+## 推荐验证顺序
 
-- 左臂 read-only：
-  - `python src/dual_nero_driver/scripts/test_left_arm.py --config src/dual_nero_bridge/config/hardware_params.yaml`
-- 右臂 read-only：
-  - `python src/dual_nero_driver/scripts/test_right_arm.py --config src/dual_nero_bridge/config/hardware_params.yaml`
-- 双臂 read-only：
-  - `python src/dual_nero_driver/scripts/test_dual_arm.py --config src/dual_nero_bridge/config/hardware_params.yaml`
-- 左臂 action 预览：
-  - `python src/dual_nero_bridge/scripts/send_left_arm_goal.py --config src/dual_nero_bridge/config/hardware_params.yaml`
-- 右臂 action 预览：
-  - `python src/dual_nero_bridge/scripts/send_right_arm_goal.py --config src/dual_nero_bridge/config/hardware_params.yaml`
+1. 左臂 read-only
+2. 右臂 read-only
+3. 双臂 read-only
+4. `/joint_states` 检查
+5. 双臂最小动作
+6. 左臂单点 action
+7. 右臂单点 action
 
-完整冒烟模板见：[docs/p1_smoke_test_report.md](docs/p1_smoke_test_report.md)
+详细命令见 [docs/p1_smoke_test_report.md](docs/p1_smoke_test_report.md)。
 
-## 当前未完成
+## 当前阶段与下一步
 
-- native `ros2_control` C++ hardware plugin
-- 真正的 `controller_manager` / `joint_state_broadcaster` 真机链
-- 严格时间参数轨迹控制
-- diagnostics / calibration / fault recovery
-- 更完整的急停闭环和通信异常恢复
+- 当前阶段：`P1 Final Cleanup` 已完成，项目准备进入 `P2 稳定化与工程化`
+- 当前最高优先级：
+  - USB-CAN 固定命名
+  - 正式入口的姿态/限位检查前置
+  - bridge/action 日志和恢复策略增强
 
-## 相关文档
+## 文档索引
 
+- [docs/project_status.md](docs/project_status.md)
+- [docs/known_issues.md](docs/known_issues.md)
+- [docs/next_actions.md](docs/next_actions.md)
+- [docs/migration_runbook.md](docs/migration_runbook.md)
+- [docs/session_resume.md](docs/session_resume.md)
 - [docs/project_baseline.md](docs/project_baseline.md)
 - [docs/p1_driver_contract.md](docs/p1_driver_contract.md)
 - [docs/p1_execution_report.md](docs/p1_execution_report.md)
