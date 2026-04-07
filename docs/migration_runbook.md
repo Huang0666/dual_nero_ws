@@ -50,6 +50,11 @@ source install/setup.bash
 - 如果中途拔插 USB-CAN：
   - 重新确认映射
   - 重启 `real_hardware.launch.py`
+- 当前 `real_hardware.launch.py` 启动后会打印：
+  - 左右臂 channel 映射
+  - `preflight_enabled`
+  - `preflight_config_path`
+  - `safety_mode`
 
 ## CAN 初始化命令
 

@@ -9,6 +9,9 @@ def generate_launch_description():
     config_path = PathJoinSubstitution(
         [FindPackageShare("dual_nero_bridge"), "config", "hardware_params.yaml"]
     )
+    preflight_config_path = PathJoinSubstitution(
+        [FindPackageShare("dual_nero_bridge"), "config", "preflight.yaml"]
+    )
 
     return LaunchDescription(
         [
@@ -32,6 +35,21 @@ def generate_launch_description():
                 default_value="50.0",
                 description="Joint state publish rate.",
             ),
+            DeclareLaunchArgument(
+                "preflight_enabled",
+                default_value="true",
+                description="Whether runtime preflight checks are enabled.",
+            ),
+            DeclareLaunchArgument(
+                "preflight_config_path",
+                default_value=preflight_config_path,
+                description="Path to the bridge preflight config file.",
+            ),
+            DeclareLaunchArgument(
+                "safety_mode",
+                default_value="strict",
+                description="Safety mode label exposed to the bridge runtime.",
+            ),
             Node(
                 package="dual_nero_bridge",
                 executable="real_execution_node",
@@ -43,6 +61,9 @@ def generate_launch_description():
                         "allow_motion": LaunchConfiguration("allow_motion"),
                         "enable_on_start": LaunchConfiguration("enable_on_start"),
                         "publish_rate_hz": LaunchConfiguration("publish_rate_hz"),
+                        "preflight_enabled": LaunchConfiguration("preflight_enabled"),
+                        "preflight_config_path": LaunchConfiguration("preflight_config_path"),
+                        "safety_mode": LaunchConfiguration("safety_mode"),
                     }
                 ],
             ),

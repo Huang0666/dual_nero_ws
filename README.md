@@ -2,7 +2,7 @@
 
 `dual_nero_ws` 是面向 NERO 双臂机器人的 ROS 2 工作区。
 
-当前仓库固定为三层结构：
+当前仓库维持三层结构：
 
 - `display`
   - 包：`src/dual_nero_description`
@@ -16,109 +16,154 @@
 
 ## 当前结论
 
-- P1 已完成并通过当前实机验证。
-- 当前真实执行方案是 **bridge 方案**，不是 native C++ `ros2_control` hardware plugin。
-- `pyAgxArm` 已确认可用于 Nero 实机。
-- 当前推荐路线是继续沿 bridge 做稳定化和工程化，不建议立即切到 native plugin。
+- P1 已完成，并通过 bridge 路线的真机最小执行链验证。
+- 当前正式执行架构仍然是 Python bridge，不切 native `ros2_control` hardware plugin。
+- P2 当前聚焦稳定化与工程化：统一 preflight、启动期配置校验、日志收口、故障可诊断。
 
-## P1 已完成项
+## P2 preflight 总览
 
-- 左臂单臂 read-only 成功
-- 右臂单臂 read-only 成功
-- 双臂只读成功
-- `/joint_states` 14 joints 正常
-- 双臂最小动作成功
-- 左臂单点 action 成功
-- 右臂单点 action 成功
-- 双臂动作一致
+当前正式执行入口统一接入 preflight：
 
-## 当前实机稳定配置
+- `/left_arm_controller/follow_joint_trajectory`
+- `/right_arm_controller/follow_joint_trajectory`
+- `/left_arm_controller/joint_command`
+- `/right_arm_controller/joint_command`
+- `/dual_arms/joint_command`
 
-当前 `create_agx_arm_config(...)` 的稳定做法是最小参数集：
+运行时 preflight 统一检查：
 
-- `robot="nero"`
-- `comm="can"`
-- `channel`
-- `interface`
-- `bitrate`
+- `allow_motion`
+- arm online
+- arm enabled
+- 当前状态可读
+- 当前状态未过旧
+- 当前姿态未越限
+- 当前姿态未接近限位
+- 当前状态到目标首点偏差未超阈值
+- joint set 与命名合同匹配
+- goal / joint command 结构合法
 
-当前实机验证下，不传：
+启动期校验独立于运行时 preflight gate，始终执行：
 
-- `enable_check_can`
-- `auto_connect`
-- `timeout`
+- `hardware_config` 文件存在
+- `preflight_config_path` 文件存在
+- 左右臂 channel 参数存在
+- MoveIt joint limits 文件存在
+- bridge 配置与 MoveIt 配置中的关节软限位完全一致
 
-运行时已确认的行为：
+`preflight_enabled` 的准确语义：
 
-- `connect()` 后必须调用 `set_normal_mode()`
-- `enable()` 需要轮询重试，不能按一次返回值判失败
-- `enable_all()` 以 7 个关节全部 enabled 为成功标准
+- `true`：启用运行时 preflight gate
+- `false`：仅跳过运行时 gate
+- 无论取值如何，启动期校验都不会被关闭
 
-## 已确认现场问题
+## 当前已知现场问题
 
-### 1. 右臂初始位姿超限
+### 1. 右臂初始位姿可能超限
 
-- 首次双臂最小动作失败的根因是右臂初始位姿超出当前限位。
-- 当前处理方式是：
-  - 先失能
-  - 手动调回合法区间
-  - 再重新执行测试
+- 现场曾因右臂初始姿态超限导致双臂最小动作失败。
+- 当前正式入口已把“当前姿态越限 / 接近限位”前置到 preflight。
 
-### 2. USB-CAN 映射错位
+### 2. USB-CAN 映射可能错位
 
-- `can0` / `can1` 与物理左右臂可能因 USB-CAN 枚举和插拔顺序发生错位。
+- `can0` / `can1` 与物理左右臂可能因插拔顺序发生错位。
 - 现场曾出现“左命令驱右臂 / 右命令驱左臂”。
-- 当前仍使用 `can0/can1` 临时方案。
-- 后续建议是为左右臂准备固定命名，例如 `udev`。
-- 如果中途拔插 USB-CAN，建议重新确认映射，并重启 `real_hardware.launch.py` 后再继续测试。
+- 当前仍使用 `can0/can1`，但启动时会明确打印：
+  - `left_arm channel -> ...`
+  - `right_arm channel -> ...`
+- 中途插拔 USB-CAN 后，必须重新确认映射并重启 `real_hardware.launch.py`。
 
-## 测试脚本当前行为
+## 推荐启动方式
 
-- `test_left_arm.py`、`test_right_arm.py`、`test_dual_arm.py` 默认都会安全收尾：
-  - `stop`
-  - `disable_all`
-  - `close`
-- 如果要连续执行 `test + action`，建议显式传 `--keep-enabled`
-- `--keep-enabled` 模式下：
-  - 仍执行 `stop`
-  - 不自动 `disable_all`
-  - 不主动切回失能
+### Read-only
+
+```bash
+ros2 launch dual_nero_bringup real_hardware.launch.py allow_motion:=false enable_on_start:=false
+```
+
+### 动作测试
+
+```bash
+ros2 launch dual_nero_bringup real_hardware.launch.py allow_motion:=true enable_on_start:=true
+```
+
+### 显式关闭运行时 preflight gate
+
+```bash
+ros2 launch dual_nero_bringup real_hardware.launch.py \
+  allow_motion:=true \
+  enable_on_start:=true \
+  preflight_enabled:=false
+```
+
+注意：这不会关闭启动期配置/路径/限位一致性校验。
+
+## 合法命令示例
+
+### 左臂单点 action
+
+```bash
+ros2 run dual_nero_bridge send_left_arm_goal.py
+```
+
+### 右臂单点 action
+
+```bash
+ros2 run dual_nero_bridge send_right_arm_goal.py
+```
+
+## 会被 preflight 拒绝的示例
+
+### `allow_motion=false`
+
+在 read-only 模式下发送 action 或 topic 命令，预期会被拒绝，错误码为：
+
+```text
+ALLOW_MOTION_DISABLED
+```
+
+### 错误的 joint set
+
+若向左臂 controller 发送非 `left_joint1..7` 的 joint_names，预期会被拒绝，错误码为：
+
+```text
+INVALID_JOINT_SET
+```
+
+## 预期日志示例
+
+启动日志：
+
+```text
+[bringup] left_arm channel -> can0
+[bringup] right_arm channel -> can1
+[bringup] preflight_enabled -> true
+[bringup] preflight_config_path -> .../preflight.yaml
+[bringup] safety_mode -> strict
+```
+
+执行前日志：
+
+```text
+[STATE][left_arm_controller] received trajectory goal; source=trajectory, joint_names=[...], point_count=1
+[STATE][left_arm_controller] preflight result -> ok=False, code=ALLOW_MOTION_DISABLED, message=left_arm_controller rejected because allow_motion=false.
+```
 
 ## 冻结命名合同
 
 - joints：`left_joint1..7`、`right_joint1..7`
 - groups：`left_arm`、`right_arm`、`dual_arms`
 - controllers：`left_arm_controller`、`right_arm_controller`、`joint_state_broadcaster`
-- TF trunk：`world -> dual_base_plate -> dual_column -> dual_crossbar -> {left/right}_base_link -> ...`
 
-## 推荐验证顺序
+## 当前限制
 
-1. 左臂 read-only
-2. 右臂 read-only
-3. 双臂 read-only
-4. `/joint_states` 检查
-5. 双臂最小动作
-6. 左臂单点 action
-7. 右臂单点 action
-
-详细命令见 [docs/p1_smoke_test_report.md](docs/p1_smoke_test_report.md)。
-
-## 当前阶段与下一步
-
-- 当前阶段：`P1 Final Cleanup` 已完成，项目准备进入 `P2 稳定化与工程化`
-- 当前最高优先级：
-  - USB-CAN 固定命名
-  - 正式入口的姿态/限位检查前置
-  - bridge/action 日志和恢复策略增强
+- 当前 bridge 不是 native `ros2_control` hardware plugin
+- 当前 `FollowJointTrajectory` 只支持单点 goal
+- 当前 USB-CAN 映射仍依赖现场确认
 
 ## 文档索引
 
+- [docs/p2_preflight_design.md](docs/p2_preflight_design.md)
+- [docs/p1_smoke_test_report.md](docs/p1_smoke_test_report.md)
 - [docs/project_status.md](docs/project_status.md)
 - [docs/known_issues.md](docs/known_issues.md)
-- [docs/next_actions.md](docs/next_actions.md)
-- [docs/migration_runbook.md](docs/migration_runbook.md)
-- [docs/session_resume.md](docs/session_resume.md)
-- [docs/project_baseline.md](docs/project_baseline.md)
-- [docs/p1_driver_contract.md](docs/p1_driver_contract.md)
-- [docs/p1_execution_report.md](docs/p1_execution_report.md)
-- [docs/p1_smoke_test_report.md](docs/p1_smoke_test_report.md)

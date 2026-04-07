@@ -1,0 +1,16 @@
+preflight:
+  enabled: true
+  safety_mode: strict
+  near_limit_margin: 0.05
+  reject_on_near_limit: true
+  max_start_deviation: 0.35
+  max_state_age_sec: 0.5
+  require_online: true
+  require_enabled: true
+  require_dual_online: true
+  require_dual_enabled: true
+  moveit_joint_limits_path: ../../dual_nero_moveit_config/config/joint_limits.yaml
+  scopes:
+    left_arm: [left]
+    right_arm: [right]
+    dual_arms: [left, right]

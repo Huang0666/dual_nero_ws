@@ -6,12 +6,9 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 
 from dual_nero_driver.safety import ensure_float_list, expected_joint_names
 
-from .errors import (
-    BridgeArmUnavailableError,
-    BridgeMotionRejectedError,
-    BridgeTrajectoryValidationError,
-)
+from .errors import BridgeArmUnavailableError, BridgeMotionRejectedError
 from .logging_utils import log_abort, log_reject
+from .preflight import PreflightChecker, PreflightResult
 from .runtime import DualNeroBridgeRuntime
 
 
@@ -20,11 +17,13 @@ class SingleArmFollowJointTrajectoryServer:
         self,
         node,
         runtime: DualNeroBridgeRuntime,
+        preflight: PreflightChecker,
         *,
         side: str,
     ) -> None:
         self._node = node
         self._runtime = runtime
+        self._preflight = preflight
         self._side = side
         self._joint_names = expected_joint_names(side)
         self._controller_name = f"{side}_arm_controller"
@@ -41,14 +40,21 @@ class SingleArmFollowJointTrajectoryServer:
         self._action_server.destroy()
 
     def goal_callback(self, goal_request: FollowJointTrajectory.Goal):
-        try:
-            self._validate_goal(goal_request)
-        except (
-            BridgeTrajectoryValidationError,
-            BridgeMotionRejectedError,
-            BridgeArmUnavailableError,
-        ) as exc:
-            log_reject(self._node.get_logger(), self._controller_name, str(exc))
+        trajectory = goal_request.trajectory
+        self._log_received_goal(trajectory.joint_names, len(trajectory.points))
+        result = self._preflight.check_trajectory_goal(
+            side=self._side,
+            controller_name=self._controller_name,
+            joint_names=trajectory.joint_names,
+            points=trajectory.points,
+        )
+        self._log_preflight_result(result)
+        if not result.ok:
+            log_reject(
+                self._node.get_logger(),
+                self._controller_name,
+                self._format_preflight_message(result),
+            )
             return GoalResponse.REJECT
         return GoalResponse.ACCEPT
 
@@ -61,7 +67,27 @@ class SingleArmFollowJointTrajectoryServer:
         return CancelResponse.ACCEPT
 
     def execute_callback(self, goal_handle):
-        point = goal_handle.request.trajectory.points[0]
+        trajectory = goal_handle.request.trajectory
+        result = self._preflight.check_trajectory_goal(
+            side=self._side,
+            controller_name=self._controller_name,
+            joint_names=trajectory.joint_names,
+            points=trajectory.points,
+        )
+        self._log_preflight_result(result)
+        if not result.ok:
+            goal_handle.abort()
+            log_abort(
+                self._node.get_logger(),
+                self._controller_name,
+                self._format_preflight_message(result),
+            )
+            return self._result(
+                error_code=FollowJointTrajectory.Result.INVALID_GOAL,
+                error_string=self._format_preflight_message(result),
+            )
+
+        point = trajectory.points[0]
         try:
             target = ensure_float_list(
                 point.positions,
@@ -96,49 +122,6 @@ class SingleArmFollowJointTrajectoryServer:
                 error_string=message,
             )
 
-    def _validate_goal(self, goal_request: FollowJointTrajectory.Goal) -> None:
-        trajectory = goal_request.trajectory
-        self._validate_runtime_motion_prerequisites()
-
-        if list(trajectory.joint_names) != self._joint_names:
-            raise BridgeTrajectoryValidationError(
-                f"joint_names must exactly match {self._joint_names}, "
-                f"got {list(trajectory.joint_names)}."
-            )
-        if not trajectory.points:
-            raise BridgeTrajectoryValidationError("trajectory must contain exactly one point.")
-        if len(trajectory.points) != 1:
-            raise BridgeTrajectoryValidationError(
-                "this bridge currently supports exactly one trajectory point per goal; "
-                f"received {len(trajectory.points)} points."
-            )
-
-        point = trajectory.points[0]
-        ensure_float_list(
-            point.positions,
-            expected_len=len(self._joint_names),
-            label=f"{self._controller_name} point.positions",
-        )
-        self._validate_optional_sequence(
-            point.velocities,
-            label=f"{self._controller_name} point.velocities",
-        )
-        self._validate_optional_sequence(
-            point.accelerations,
-            label=f"{self._controller_name} point.accelerations",
-        )
-        self._validate_optional_sequence(
-            point.effort,
-            label=f"{self._controller_name} point.effort",
-        )
-        self._validate_time_from_start(point)
-
-    def _validate_runtime_motion_prerequisites(self) -> None:
-        if self._side == "left":
-            self._runtime.require_arm_ready_for_motion("left")
-            return
-        self._runtime.require_arm_ready_for_motion("right")
-
     def _move_side(self, target: list[float], *, wait: bool) -> None:
         if self._side == "left":
             self._runtime.move_left(target, wait=wait)
@@ -167,23 +150,22 @@ class SingleArmFollowJointTrajectoryServer:
         ]
         return feedback
 
-    def _validate_optional_sequence(self, values, *, label: str) -> None:
-        if not values:
-            return
-        ensure_float_list(values, expected_len=len(self._joint_names), label=label)
+    def _log_received_goal(self, joint_names, point_count: int) -> None:
+        self._node.get_logger().info(
+            f"[STATE][{self._controller_name}] received trajectory goal; "
+            f"source=trajectory, "
+            f"joint_names={list(joint_names)}, point_count={point_count}"
+        )
+
+    def _log_preflight_result(self, result: PreflightResult) -> None:
+        self._node.get_logger().info(
+            f"[STATE][{self._controller_name}] preflight result -> "
+            f"ok={result.ok}, code={result.code}, message={result.message}"
+        )
 
     @staticmethod
-    def _validate_time_from_start(point: JointTrajectoryPoint) -> None:
-        sec = int(point.time_from_start.sec)
-        nanosec = int(point.time_from_start.nanosec)
-        if sec < 0 or nanosec < 0:
-            raise BridgeTrajectoryValidationError(
-                "time_from_start must be non-negative."
-            )
-        if nanosec >= 1_000_000_000:
-            raise BridgeTrajectoryValidationError(
-                "time_from_start.nanosec must be < 1_000_000_000."
-            )
+    def _format_preflight_message(result: PreflightResult) -> str:
+        return f"{result.code}: {result.message}"
 
     @staticmethod
     def _result(*, error_code: int, error_string: str) -> FollowJointTrajectory.Result:

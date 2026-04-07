@@ -1,29 +1,88 @@
 # dual_nero_bringup
 
-`dual_nero_bringup` 是 `real_hardware_execution` 的 operator-facing 入口。
+`dual_nero_bringup` 是 `real_hardware_execution` 的 operator-facing 启动入口。
 
 ## 入口
 
-- `ros2 launch dual_nero_bringup real_hardware.launch.py`
+```bash
+ros2 launch dual_nero_bringup real_hardware.launch.py
+```
 
-## 默认行为
+## 启动职责
 
-- 启动 `dual_nero_bridge`
-- 启动 `robot_state_publisher`
-- 可选启动 `move_group`
-- 可选启动 MoveIt RViz
-- 默认保持：
-  - `allow_motion=false`
-  - `enable_on_start=false`
+bringup / launch 层只负责：
 
-这意味着默认是 **连接 + 读状态 + 空闲** 模式，不做动作。
+- 解析并注入正式启动参数
+- 校验配置文件和关键路径存在
+- 校验左右臂 channel 参数存在
+- 校验 bridge 与 MoveIt 的关节软限位完全一致
+- 打印当前 channel 映射和 safety/preflight 状态
 
-## P1.1 收口说明
+bringup / launch 层不负责：
 
-- `real_hardware.launch.py` 的语义不变，仍然是真机入口
-- 文档明确了 bridge 当前只支持单点 `FollowJointTrajectory` goal
-- 文档补充了 read-only check 和最小动作测试方式
-- 文档补充了 `allow_motion` / `enable_on_start` 的前提关系
+- 运行时姿态判断
+- 运行时动作拦截
+- 最终 reject / abort 决策
+
+## 正式启动参数
+
+- `hardware_config`
+- `allow_motion`
+- `enable_on_start`
+- `publish_rate_hz`
+- `preflight_enabled`
+- `preflight_config_path`
+- `safety_mode`
+- `with_moveit`
+- `with_rviz`
+
+## `preflight_enabled` 语义
+
+- `true`：启用运行时 preflight gate
+- `false`：仅关闭运行时 preflight gate
+
+注意：
+
+- `preflight_enabled` 不会关闭启动期校验
+- 即使 `preflight_enabled:=false`，以下检查仍然必须通过：
+  - 配置文件路径存在
+  - 左右臂 `can.channel` 存在
+  - MoveIt joint limits 路径存在
+  - bridge 与 MoveIt 关节限位一致
+
+## 启动日志
+
+启动成功后，日志必须至少出现：
+
+```text
+[bringup] left_arm channel -> can0
+[bringup] right_arm channel -> can1
+[bringup] preflight_enabled -> true
+[bringup] preflight_config_path -> /.../preflight.yaml
+[bringup] safety_mode -> strict
+```
+
+用法：
+
+- 用 `left_arm channel` / `right_arm channel` 确认当前 USB-CAN 映射
+- 用 `preflight_enabled` 确认运行时 gate 是否开启
+- 用 `preflight_config_path` 确认当前使用的 preflight 配置
+- 用 `safety_mode` 确认当前安全模式标签
+
+## 常见启动失败语义
+
+- `hardware_config does not exist`
+  - `hardware_config` 路径错误
+- `preflight_config_path does not exist`
+  - `preflight_config_path` 路径错误
+- `left_arm.can.channel is missing`
+  - bridge 硬件配置缺少左臂 channel
+- `right_arm.can.channel is missing`
+  - bridge 硬件配置缺少右臂 channel
+- `preflight.moveit_joint_limits_path does not exist`
+  - preflight 配置中引用的 MoveIt 限位文件不存在
+- `Bridge and MoveIt joint limits differ`
+  - bridge 配置与 MoveIt 配置中的软限位不一致，必须先修正再启动
 
 ## 推荐启动方式
 
@@ -33,16 +92,19 @@
 ros2 launch dual_nero_bringup real_hardware.launch.py allow_motion:=false enable_on_start:=false
 ```
 
-### 最小动作测试
+### 动作测试
 
 ```bash
 ros2 launch dual_nero_bringup real_hardware.launch.py allow_motion:=true enable_on_start:=true
 ```
 
-## 当前限制
+### 关闭运行时 preflight gate
 
-- `enable_on_start=false` 时，bridge 不会自动 enable
-- 动作命令在该模式下会被显式拒绝
-- bridge 仍然不是 native `ros2_control` plugin
+```bash
+ros2 launch dual_nero_bringup real_hardware.launch.py \
+  allow_motion:=true \
+  enable_on_start:=true \
+  preflight_enabled:=false
+```
 
-详细步骤见：[../../docs/p1_smoke_test_report.md](../../docs/p1_smoke_test_report.md)
+这不会绕过启动期校验。

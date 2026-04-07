@@ -5,14 +5,21 @@ from trajectory_msgs.msg import JointTrajectory
 from dual_nero_driver.safety import ensure_float_list, expected_joint_names
 
 from .errors import BridgeArmUnavailableError, BridgeMotionRejectedError
-from .logging_utils import log_reject
+from .logging_utils import log_reject, log_state
+from .preflight import PreflightChecker
 from .runtime import DualNeroBridgeRuntime
 
 
 class JointCommandBridge:
-    def __init__(self, node, runtime: DualNeroBridgeRuntime) -> None:
+    def __init__(
+        self,
+        node,
+        runtime: DualNeroBridgeRuntime,
+        preflight: PreflightChecker,
+    ) -> None:
         self._node = node
         self._runtime = runtime
+        self._preflight = preflight
         self._left_joint_names = expected_joint_names("left")
         self._right_joint_names = expected_joint_names("right")
         self._dual_joint_names = self._left_joint_names + self._right_joint_names
@@ -40,6 +47,7 @@ class JointCommandBridge:
             msg,
             expected_names=self._left_joint_names,
             source="left_arm_controller",
+            scope="left_arm",
             move_callback=self._runtime.move_left,
         )
 
@@ -48,23 +56,25 @@ class JointCommandBridge:
             msg,
             expected_names=self._right_joint_names,
             source="right_arm_controller",
+            scope="right_arm",
             move_callback=self._runtime.move_right,
         )
 
     def _handle_dual_command(self, msg: JointTrajectory) -> None:
         source = "dual_arms"
         try:
-            self._runtime.require_dual_motion_ready()
-            point = self._extract_single_point(
-                msg,
-                expected_names=self._dual_joint_names,
-                label=f"{source}/joint_command",
+            self._log_received_command(source, msg)
+            result = self._preflight.check_joint_command(
+                scope="dual_arms",
+                source_name=source,
+                joint_names=msg.joint_names,
+                points=msg.points,
             )
-            target = ensure_float_list(
-                point.positions,
-                expected_len=len(self._dual_joint_names),
-                label=f"{source} target",
-            )
+            self._log_preflight_result(source, result)
+            if not result.ok:
+                raise ValueError(self._format_preflight_message(result))
+            point = msg.points[0]
+            target = ensure_float_list(point.positions, expected_len=len(self._dual_joint_names), label=f"{source} target")
             left_count = len(self._left_joint_names)
             self._runtime.move_both(
                 target[:left_count],
@@ -82,41 +92,42 @@ class JointCommandBridge:
         *,
         expected_names: list[str],
         source: str,
+        scope: str,
         move_callback,
     ) -> None:
-        side = "left" if source == "left_arm_controller" else "right"
         try:
-            self._runtime.require_arm_ready_for_motion(side)
-            point = self._extract_single_point(
-                msg,
-                expected_names=expected_names,
-                label=f"{source}/joint_command",
+            self._log_received_command(source, msg)
+            result = self._preflight.check_joint_command(
+                scope=scope,
+                source_name=source,
+                joint_names=msg.joint_names,
+                points=msg.points,
             )
-            target = ensure_float_list(
-                point.positions,
-                expected_len=len(expected_names),
-                label=f"{source} target",
-            )
+            self._log_preflight_result(source, result)
+            if not result.ok:
+                raise ValueError(self._format_preflight_message(result))
+            point = msg.points[0]
+            target = ensure_float_list(point.positions, expected_len=len(expected_names), label=f"{source} target")
             move_callback(target, wait=False)
         except (BridgeMotionRejectedError, BridgeArmUnavailableError, ValueError) as exc:
             log_reject(self._node.get_logger(), source, str(exc))
         except Exception as exc:
             log_reject(self._node.get_logger(), source, f"joint command failed: {exc}")
 
+    def _log_received_command(self, source: str, msg: JointTrajectory) -> None:
+        log_state(
+            self._node.get_logger(),
+            source,
+            f"received topic joint command; source=topic, joint_names={list(msg.joint_names)}, point_count={len(msg.points)}",
+        )
+
+    def _log_preflight_result(self, source: str, result) -> None:
+        log_state(
+            self._node.get_logger(),
+            source,
+            f"preflight result -> ok={result.ok}, code={result.code}, message={result.message}",
+        )
+
     @staticmethod
-    def _extract_single_point(
-        msg: JointTrajectory,
-        *,
-        expected_names: list[str],
-        label: str,
-    ):
-        if list(msg.joint_names) != expected_names:
-            raise ValueError(
-                f"{label} joint_names must exactly match {expected_names}, "
-                f"got {list(msg.joint_names)}."
-            )
-        if len(msg.points) != 1:
-            raise ValueError(
-                f"{label} must contain exactly one trajectory point, got {len(msg.points)}."
-            )
-        return msg.points[0]
+    def _format_preflight_message(result) -> str:
+        return f"{result.code}: {result.message}"

@@ -3,5 +3,8 @@ real_execution:
   allow_motion: false
   enable_on_start: false
   publish_rate_hz: 50.0
+  preflight_enabled: true
+  preflight_config_path: ""
+  safety_mode: strict
   with_moveit: true
   with_rviz: false

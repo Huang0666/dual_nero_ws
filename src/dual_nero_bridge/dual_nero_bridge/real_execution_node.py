@@ -9,6 +9,7 @@ from .follow_joint_trajectory_server import SingleArmFollowJointTrajectoryServer
 from .joint_command_bridge import JointCommandBridge
 from .joint_state_bridge import JointStateBridge
 from .logging_utils import log_fatal, log_state
+from .preflight import PreflightChecker
 from .runtime import DualNeroBridgeRuntime
 
 
@@ -19,19 +20,33 @@ class RealExecutionNode(Node):
         self.declare_parameter("publish_rate_hz", 50.0)
         self.declare_parameter("allow_motion", False)
         self.declare_parameter("enable_on_start", False)
+        self.declare_parameter("preflight_enabled", True)
+        self.declare_parameter("preflight_config_path", "")
+        self.declare_parameter("safety_mode", "strict")
 
         config_path = str(self.get_parameter("config_path").value)
         publish_rate_hz = float(self.get_parameter("publish_rate_hz").value)
         allow_motion = _coerce_bool(self.get_parameter("allow_motion").value)
         enable_on_start = _coerce_bool(self.get_parameter("enable_on_start").value)
+        preflight_enabled = _coerce_bool(self.get_parameter("preflight_enabled").value)
+        preflight_config_path = str(self.get_parameter("preflight_config_path").value)
+        safety_mode = str(self.get_parameter("safety_mode").value or "strict")
 
         if not config_path:
             raise ValueError("config_path parameter must not be empty.")
+        if not preflight_config_path:
+            raise ValueError("preflight_config_path parameter must not be empty.")
 
         self.runtime = DualNeroBridgeRuntime(
             config_path=config_path,
             allow_motion=allow_motion,
             enable_on_start=enable_on_start,
+        )
+        self.preflight = PreflightChecker(
+            self.runtime,
+            config_path=preflight_config_path,
+            enabled=preflight_enabled,
+            safety_mode=safety_mode,
         )
         self.runtime.connect()
         self.runtime.enable_if_requested()
@@ -40,23 +55,37 @@ class RealExecutionNode(Node):
             self.runtime,
             publish_rate_hz=publish_rate_hz,
         )
-        self.joint_command_bridge = JointCommandBridge(self, self.runtime)
+        self.joint_command_bridge = JointCommandBridge(
+            self,
+            self.runtime,
+            self.preflight,
+        )
         self.left_trajectory_server = SingleArmFollowJointTrajectoryServer(
             self,
             self.runtime,
+            self.preflight,
             side="left",
         )
         self.right_trajectory_server = SingleArmFollowJointTrajectoryServer(
             self,
             self.runtime,
+            self.preflight,
             side="right",
         )
+        channel_mapping = self.runtime.channel_mapping()
         log_state(
             self.get_logger(),
             "startup",
             "real_hardware_execution bridge started; "
             f"allow_motion={allow_motion}, enable_on_start={enable_on_start}, "
-            f"publish_rate_hz={publish_rate_hz}, {self.runtime.availability_summary()}",
+            f"publish_rate_hz={publish_rate_hz}, "
+            f"preflight_enabled={preflight_enabled}, "
+            f"preflight_config_path={preflight_config_path}, "
+            f"safety_mode={safety_mode}, "
+            f"left_arm_channel={channel_mapping['left_arm']}, "
+            f"right_arm_channel={channel_mapping['right_arm']}, "
+            f"{self.preflight.summary()}, "
+            f"{self.runtime.availability_summary()}",
         )
         if not (self.runtime.left_state.available and self.runtime.right_state.available):
             log_state(

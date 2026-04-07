@@ -65,6 +65,7 @@
 - 当前 bridge 只支持单点 `FollowJointTrajectory` goal。
 - 当前 bridge 不是 native `ros2_control` hardware plugin。
 - 当前运行时 safety 仍以 `src/dual_nero_bridge/config/hardware_params.yaml` 为准。
+- 当前正式入口已新增统一 preflight；即便绕过 test 脚本，action/topic 入口也会先做执行前检查。
 
 ## 9. 现场恢复注意事项
 

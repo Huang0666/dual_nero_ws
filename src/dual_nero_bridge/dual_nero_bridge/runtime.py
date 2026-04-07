@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import threading
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -53,6 +54,11 @@ class DualNeroBridgeRuntime:
             controller_name="right_arm_controller",
         )
         self._connected = False
+        self._last_arm_snapshot: dict[Side, dict | None] = {"left": None, "right": None}
+        self._last_arm_state_monotonic: dict[Side, float | None] = {
+            "left": None,
+            "right": None,
+        }
 
     def connect(self) -> None:
         with self.lock:
@@ -234,6 +240,39 @@ class DualNeroBridgeRuntime:
             f"right_enabled={self.right_state.enabled}"
         )
 
+    def channel_mapping(self) -> dict[str, str]:
+        return {
+            "left_arm": self.left_config.can.channel,
+            "right_arm": self.right_config.can.channel,
+        }
+
+    def arm_channel(self, side: Side) -> str:
+        return self._config(side).can.channel
+
+    def arm_status(self, side: Side) -> ArmRuntimeState:
+        with self.lock:
+            state = self._state(side)
+            return ArmRuntimeState(
+                side=state.side,
+                controller_name=state.controller_name,
+                available=state.available,
+                enabled=state.enabled,
+                last_error=state.last_error,
+            )
+
+    def arm_joint_limits(self, side: Side):
+        return self._config(side).joint_position_limits
+
+    def arm_joint_names(self, side: Side) -> list[str]:
+        return list(self.left_joint_names if side == "left" else self.right_joint_names)
+
+    def latest_arm_state_age_sec(self, side: Side) -> float | None:
+        with self.lock:
+            timestamp = self._last_arm_state_monotonic[side]
+            if timestamp is None:
+                return None
+            return max(time.monotonic() - timestamp, 0.0)
+
     def require_arm_ready_for_motion(self, side: Side) -> None:
         with self.lock:
             self._require_arm_ready_for_motion(side)
@@ -283,6 +322,8 @@ class DualNeroBridgeRuntime:
                 f"{state.controller_name} state read failed: {exc}"
             ) from exc
         state.last_error = None
+        self._last_arm_snapshot[side] = snapshot
+        self._last_arm_state_monotonic[side] = time.monotonic()
         return snapshot
 
     def _require_arm_ready_for_motion(self, side: Side) -> None:
