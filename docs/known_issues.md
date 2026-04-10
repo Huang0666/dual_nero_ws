@@ -1,78 +1,48 @@
-# Known Issues
+# 已知问题
 
-## 1. `enable()` 不能按一次返回值判失败
+## 1）`enable()` 首次可能失败
 
-- Nero 实机下，`enable()` 可能第一次返回 `False`，后续重试才成功。
-- 当前正确做法：
-  - 轮询调用 `enable()`
-  - 每次读取 `get_joints_enable_status_list()`
-  - 以 7 个关节全部 `True` 为成功标准
+- 真机下 `enable()` 可能第一次返回 `False`。
+- 正确处理方式是重试并轮询状态，直到 7 个关节全部使能。
 
-## 2. `set_normal_mode()` 必须走
+## 2）`set_normal_mode()` 必须调用
 
-- `connect()` 后必须显式调用 `set_normal_mode()`。
-- 当前 backend 已按此路径实现。
+- `connect()` 后必须走 `set_normal_mode()`。
 
-## 3. 当前最小成功参数集
+## 3）USB-CAN 映射漂移（`can0/can1`）
 
-- 当前实机稳定的 `create_agx_arm_config(...)` 参数集合：
-  - `robot="nero"`
-  - `comm="can"`
-  - `channel`
-  - `interface`
-  - `bitrate`
-- 当前实机验证下，不传：
-  - `enable_check_can`
-  - `auto_connect`
-  - `timeout`
+- USB 重插/重枚举后，左右臂可能与 `can0/can1` 对应错位。
+- 动作前必须确认映射关系。
 
-## 4. USB-CAN 映射错位
+## 4）`can1 BUS-OFF/STOPPED` 会导致右臂不可用
 
-- `can0` / `can1` 可能因 USB-CAN 枚举和插拔顺序与物理左右臂不一致。
-- 现场已出现过“左命令驱右臂 / 右命令驱左臂”。
-- 当前要求：
-  - 测试前先确认 `channel -> 物理手臂` 映射
-  - 中途拔插 USB-CAN 后，重新确认映射
-  - 重启 `real_hardware.launch.py`
-- 后续建议：
-  - 用 `udev` 做固定命名
+已观察现象：
 
-## 5. 右臂初始位姿超限
+- 右臂 `enable_all` 一直失败
+- 右臂单测 `rc=1`
+- `/joint_states --once` 在 degraded 下阻塞
 
-- 首次双臂最小动作曾因右臂初始位姿超限失败。
-- 当前处理方式：
-  - 先失能
-  - 手动调整回合法区间
-  - 再重新执行测试
-- 当前代码已在 `test_dual_arm.py --execute` 前加入预检查。
+现场根因（已复现）：
 
-## 6. test 结束自动失能
+- 右臂 CAN 物理线缆断开/接触异常
 
-- 三个 test 脚本默认都会自动执行：
-  - `stop`
-  - `disable_all`
-  - `close`
-- 如果要连续跑 `test + action`：
-  - 显式传 `--keep-enabled`
+## 5）`gs_usb` 不支持 `restart-ms`
 
-## 7. action 预览 / 执行流程
+已观察报错：
 
-- 推荐先跑 read-only，再跑双臂最小动作，再跑左右单点 action。
-- 如果 action 紧接在 test 后执行，建议测试脚本使用 `--keep-enabled`。
+- `Error: Device doesn't support restart from Bus Off.`
 
-## 8. bridge 当前边界
+建议：
 
-- 当前 bridge 只支持单点 `FollowJointTrajectory` goal。
-- 当前 bridge 不是 native `ros2_control` hardware plugin。
-- 当前运行时 safety 仍以 `src/dual_nero_bridge/config/hardware_params.yaml` 为准。
-- 当前正式入口已新增统一 preflight；即便绕过 test 脚本，action/topic 入口也会先做执行前检查。
+- 使用 `down/type/up` 显式重置，不依赖 `restart-ms`
 
-## 9. 现场恢复注意事项
+## 6）测试脚本默认会自动失能
 
-- 如果 USB-CAN 拔插过：
-  - 不要直接继续沿用旧映射
-  - 重新确认 `can0/can1`
-  - 重启真机入口
-- 如果当前姿态超限：
-  - 不要强行执行动作
-  - 先失能并人工调整回合法区间
+- `test_left_arm.py`、`test_right_arm.py`、`test_dual_arm.py` 默认会安全收尾。
+- 连续 test + action 场景才使用 `--keep-enabled`。
+
+## 7）当前 bridge 边界
+
+- 仅支持单点 `FollowJointTrajectory`
+- 仍是 bridge 方案，不是 native plugin
+- action/topic 正式入口已经接入统一 preflight
