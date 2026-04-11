@@ -35,3 +35,10 @@
 - `src/dual_nero_driver/scripts/test_dual_arm.py`
 - `src/dual_nero_bridge/scripts/send_left_arm_goal.py`
 - `src/dual_nero_bridge/scripts/send_right_arm_goal.py`
+- `src/dual_nero_bridge/scripts/validate_moveit_pipeline.py`
+
+## 当前关键 console_scripts 入口
+
+- `ros2 run dual_nero_bridge send_left_arm_goal`
+- `ros2 run dual_nero_bridge send_right_arm_goal`
+- `ros2 run dual_nero_bridge validate_moveit_pipeline`

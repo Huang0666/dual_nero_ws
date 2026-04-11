@@ -96,11 +96,11 @@ ros2 launch dual_nero_bringup real_hardware.launch.py allow_motion:=false enable
 ## action 脚本命令
 
 ```bash
-python3 src/dual_nero_bridge/scripts/send_left_arm_goal.py \
+ros2 run dual_nero_bridge send_left_arm_goal \
   --config install/dual_nero_bridge/share/dual_nero_bridge/config/hardware_params.yaml \
   --execute
 
-python3 src/dual_nero_bridge/scripts/send_right_arm_goal.py \
+ros2 run dual_nero_bridge send_right_arm_goal \
   --config install/dual_nero_bridge/share/dual_nero_bridge/config/hardware_params.yaml \
   --execute
 ```

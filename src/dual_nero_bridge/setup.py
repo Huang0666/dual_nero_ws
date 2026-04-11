@@ -27,6 +27,9 @@ setup(
         "console_scripts": [
             "real_execution_node = dual_nero_bridge.real_execution_node:main",
             "contract_check = dual_nero_bridge.contract_check:main",
+            "send_left_arm_goal = dual_nero_bridge.send_left_arm_goal:main",
+            "send_right_arm_goal = dual_nero_bridge.send_right_arm_goal:main",
+            "validate_moveit_pipeline = dual_nero_bridge.moveit_validation_cli:main",
         ]
     },
 )

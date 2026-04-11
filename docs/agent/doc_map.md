@@ -41,7 +41,17 @@
 - [../human/phases/p2/acceptance_report.md](../human/phases/p2/acceptance_report.md)（若影响验收结论）
 - [../human/overview/project_status.md](../human/overview/project_status.md)
 
-### 5. 改文档结构本身
+### 5. 改 MoveIt 验证脚本、MoveIt 命令、P3-B 验证流程
+
+必须更新：
+
+- [../human/phases/p3/moveit_validation_plan.md](../human/phases/p3/moveit_validation_plan.md)
+- [../human/phases/p3/moveit_validation_report.md](../human/phases/p3/moveit_validation_report.md)（若有真实结果）
+- [../human/overview/project_status.md](../human/overview/project_status.md)
+- [../human/overview/next_actions.md](../human/overview/next_actions.md)
+- [current_context.md](current_context.md)
+
+### 6. 改文档结构本身
 
 必须更新：
 
@@ -56,3 +66,4 @@
 - 任务：[../human/overview/next_actions.md](../human/overview/next_actions.md)
 - P2：[../human/phases/p2/acceptance_report.md](../human/phases/p2/acceptance_report.md)
 - P3-A：[../human/phases/p3/recovery_sop.md](../human/phases/p3/recovery_sop.md)
+- P3-B：[../human/phases/p3/moveit_validation_plan.md](../human/phases/p3/moveit_validation_plan.md)

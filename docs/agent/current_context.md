@@ -22,13 +22,15 @@
 
 - P2 preflight 已接入正式 action/topic 入口
 - P2 已完成现场验收
-- 文档结构正在从旧平铺/阶段混合结构迁移到 `human/` 与 `agent/` 双视图
+- 文档结构已切换到 `human/` 与 `agent/` 双视图
+- P3-B 最小 MoveIt 验证 CLI 已加入 `dual_nero_bridge`
 
 ## 当前应优先参考
 
 - Human 状态入口：[../human/overview/project_status.md](../human/overview/project_status.md)
 - Human 下一步入口：[../human/overview/next_actions.md](../human/overview/next_actions.md)
 - P3-A SOP：[../human/phases/p3/recovery_sop.md](../human/phases/p3/recovery_sop.md)
+- P3-B 计划：[../human/phases/p3/moveit_validation_plan.md](../human/phases/p3/moveit_validation_plan.md)
 
 ## 当前不做
 

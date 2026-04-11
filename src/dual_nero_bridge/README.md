@@ -13,6 +13,7 @@
 P3-A 当前正式文档：
 
 - [../../docs/human/phases/p3/recovery_sop.md](../../docs/human/phases/p3/recovery_sop.md)
+- [../../docs/human/phases/p3/moveit_validation_plan.md](../../docs/human/phases/p3/moveit_validation_plan.md)
 
 ## 主要职责
 
@@ -56,3 +57,11 @@ action/topic 路径统一使用：
 
 - 故障恢复先按 SOP 执行，再做 bridge 代码层排查
 - 不把 USB-CAN 固定命名写成当前已完成能力
+
+## P3-B 当前验证入口
+
+```bash
+ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm
+ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --execute
+ros2 run dual_nero_bridge validate_moveit_pipeline --group right_arm --execute
+```

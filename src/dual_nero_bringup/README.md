@@ -10,9 +10,10 @@
   - P3-B：MoveIt 执行链系统化验证
   - P3-C：USB-CAN 固定命名（暂缓）
 
-P3-A 当前正式文档：
+P3 当前正式文档：
 
 - [../../docs/human/phases/p3/recovery_sop.md](../../docs/human/phases/p3/recovery_sop.md)
+- [../../docs/human/phases/p3/moveit_validation_plan.md](../../docs/human/phases/p3/moveit_validation_plan.md)
 
 ## 启动入口
 
@@ -53,3 +54,12 @@ launch 层不负责：
 
 - 现场恢复优先按 SOP 走，不在 bringup 文档里复制第二套故障处置步骤
 - 继续保持 bridge 路线，不切 native plugin
+
+## P3-B 当前使用方式
+
+- `real_hardware.launch.py` 默认会带起 `move_group`
+- 现场验证时优先使用：
+
+```bash
+ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm
+```

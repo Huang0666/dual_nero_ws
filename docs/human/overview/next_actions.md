@@ -22,10 +22,18 @@
 
 ## 优先级 B：MoveIt 执行验证
 
-- 验证 MoveIt 规划到 action 执行链路
-- 核对容差与时间行为是否符合预期
-- 固化可复现的通过/失败命令
-- 在 P3-A 稳定后推进，不提前与恢复 SOP 并行搅在一起
+- 最小验证 CLI 已落地：
+  - `ros2 run dual_nero_bridge validate_moveit_pipeline`
+- 下一步重点是现场补齐：
+  - 左臂规划
+  - 右臂规划
+  - 左臂执行
+  - 右臂执行
+  - 只读负例
+- 正式计划文档：
+  - [../phases/p3/moveit_validation_plan.md](../phases/p3/moveit_validation_plan.md)
+- 正式结果要回填到：
+  - [../phases/p3/moveit_validation_report.md](../phases/p3/moveit_validation_report.md)
 
 ## 优先级 C：USB-CAN 固定命名（暂缓）
 

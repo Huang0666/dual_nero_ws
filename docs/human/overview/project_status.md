@@ -17,6 +17,12 @@
 - 已完成：`P2 preflight 稳定化与工程化`
 - 进行中：`P3 正式执行验证`
 
+## P3 当前进展
+
+- P3-A：恢复 SOP 已形成正式文档并可用于现场恢复
+- P3-B：最小验证 CLI 已落地，待现场补正式执行结果
+- P3-C：保持暂缓，不在当前周期实施
+
 ## P2 已完成内容
 
 - 启动期检查与映射/安全日志可见
@@ -35,6 +41,10 @@
 
 - 正式 SOP：
   - [../phases/p3/recovery_sop.md](../phases/p3/recovery_sop.md)
+- P3-B 验证计划：
+  - [../phases/p3/moveit_validation_plan.md](../phases/p3/moveit_validation_plan.md)
+- P3-B 验证报告：
+  - [../phases/p3/moveit_validation_report.md](../phases/p3/moveit_validation_report.md)
 - 迁移/重启手册：
   - [../operations/migration_runbook.md](../operations/migration_runbook.md)
 - 运维问题索引：

@@ -50,13 +50,20 @@ ros2 launch dual_nero_bringup real_hardware.launch.py allow_motion:=true enable_
 ## Action 示例
 
 ```bash
-python3 src/dual_nero_bridge/scripts/send_left_arm_goal.py \
+ros2 run dual_nero_bridge send_left_arm_goal \
   --config install/dual_nero_bridge/share/dual_nero_bridge/config/hardware_params.yaml \
   --execute
 
-python3 src/dual_nero_bridge/scripts/send_right_arm_goal.py \
+ros2 run dual_nero_bridge send_right_arm_goal \
   --config install/dual_nero_bridge/share/dual_nero_bridge/config/hardware_params.yaml \
   --execute
+```
+
+## P3-B MoveIt 验证示例
+
+```bash
+ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm
+ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --execute
 ```
 
 ## 注意事项
