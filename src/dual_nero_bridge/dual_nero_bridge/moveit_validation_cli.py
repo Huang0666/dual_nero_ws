@@ -176,12 +176,13 @@ class MoveItValidationClient(Node):
     def summarize_plan(self, response: GetMotionPlan.Response) -> MoveItPlanSummary:
         motion_plan_response = response.motion_plan_response
         error_code = motion_plan_response.error_code
+        error_details = _read_moveit_error_details(error_code)
         return MoveItPlanSummary(
             group_name=self.group_name,
-            error_code=int(error_code.val),
-            error_name=moveit_error_name(int(error_code.val)),
-            message=error_code.message,
-            source=error_code.source,
+            error_code=error_details["code"],
+            error_name=error_details["name"],
+            message=error_details["message"],
+            source=error_details["source"],
             planning_time=float(motion_plan_response.planning_time),
             trajectory_point_count=len(motion_plan_response.trajectory.joint_trajectory.points),
         )
@@ -213,13 +214,14 @@ class MoveItValidationClient(Node):
 
         result = result_handle.result
         error_code = result.error_code
+        error_details = _read_moveit_error_details(error_code)
         return MoveItExecutionSummary(
             group_name=self.group_name,
-            error_code=int(error_code.val),
-            error_name=moveit_error_name(int(error_code.val)),
-            message=error_code.message,
-            source=error_code.source,
-            state=result.state,
+            error_code=error_details["code"],
+            error_name=error_details["name"],
+            message=error_details["message"],
+            source=error_details["source"],
+            state=str(getattr(result, "state", "")),
         )
 
     def _build_start_state(self) -> RobotState:
@@ -365,6 +367,16 @@ def moveit_error_name(code: int) -> str:
         if name.isupper() and isinstance(value, int) and value == code:
             return name
     return f"UNKNOWN_{code}"
+
+
+def _read_moveit_error_details(error_code: MoveItErrorCodes) -> dict[str, str | int]:
+    code = int(getattr(error_code, "val"))
+    return {
+        "code": code,
+        "name": moveit_error_name(code),
+        "message": str(getattr(error_code, "message", "")),
+        "source": str(getattr(error_code, "source", "")),
+    }
 
 
 def main(argv: list[str] | None = None) -> int:
