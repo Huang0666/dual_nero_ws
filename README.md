@@ -13,13 +13,19 @@
 - P1：已完成
 - P2：已完成并通过现场验收
 - 当前执行架构：bridge（未切 native `ros2_control`）
-- 当前阶段：P3 准备中
+- 当前阶段：P3 进行中（A/B 执行，C 暂缓）
 
-参考文档：
+P3 当前拆分：
 
-- [docs/p2_acceptance_report.md](docs/p2_acceptance_report.md)
-- [docs/project_status.md](docs/project_status.md)
-- [docs/next_actions.md](docs/next_actions.md)
+- P3-A：故障恢复 SOP 标准化（先做）
+- P3-B：MoveIt 执行链系统化验证（再做）
+- P3-C：USB-CAN 固定命名（暂缓）
+
+文档入口：
+
+- 给人看：[docs/human/README.md](docs/human/README.md)
+- 给 agent 看：[docs/agent/README.md](docs/agent/README.md)
+- 文档总入口：[docs/README.md](docs/README.md)
 
 ## 真机入口
 
@@ -57,3 +63,4 @@ python3 src/dual_nero_bridge/scripts/send_right_arm_goal.py \
 
 - `preflight_enabled=false` 仅关闭运行时 gate，不会关闭启动期检查。
 - USB-CAN 有插拔或重启后，先确认映射再重启 launch。
+- 现场恢复优先按 [docs/human/phases/p3/recovery_sop.md](docs/human/phases/p3/recovery_sop.md) 执行，不要临场拼凑命令。

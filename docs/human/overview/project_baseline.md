@@ -11,13 +11,13 @@
 当前三层对应关系：
 
 - `display`
-  - 包：[../src/dual_nero_description](../src/dual_nero_description)
+  - 包：[../../../src/dual_nero_description](../../../src/dual_nero_description)
   - 作用：模型显示、TF 可视化、RViz 纯显示
 - `planning_demo`
-  - 包：[../src/dual_nero_moveit_config](../src/dual_nero_moveit_config)
+  - 包：[../../../src/dual_nero_moveit_config](../../../src/dual_nero_moveit_config)
   - 作用：MoveIt 规划 demo、fake `ros2_control`
 - `real_hardware_execution`
-  - 包：[../src/dual_nero_driver](../src/dual_nero_driver)、[../src/dual_nero_bridge](../src/dual_nero_bridge)、[../src/dual_nero_bringup](../src/dual_nero_bringup)
+  - 包：[../../../src/dual_nero_driver](../../../src/dual_nero_driver)、[../../../src/dual_nero_bridge](../../../src/dual_nero_bridge)、[../../../src/dual_nero_bringup](../../../src/dual_nero_bringup)
   - 作用：真实 joint state 回读、真实关节命令下发、MoveIt 可对接的最小真实执行入口
 
 ## 仓库结构图
@@ -26,10 +26,9 @@
 dual_nero_ws/
 |-- README.md
 |-- docs/
-|   |-- project_baseline.md
-|   |-- p1_driver_contract.md
-|   |-- p1_execution_report.md
-|   `-- p1_smoke_test_report.md
+|   |-- README.md
+|   |-- human/
+|   `-- agent/
 `-- src/
     |-- dual_nero_description/
     |-- dual_nero_moveit_config/
@@ -63,8 +62,8 @@ dual_nero_ws/
 
 ### 占位 / 仍保留的 demo 组件
 
-- [../src/dual_nero_moveit_config/config/dual_nero_description.ros2_control.xacro](../src/dual_nero_moveit_config/config/dual_nero_description.ros2_control.xacro) 仍使用 `mock_components/GenericSystem`
-- [../src/dual_nero_moveit_config/launch/demo.launch.py](../src/dual_nero_moveit_config/launch/demo.launch.py) 仍然只代表 `planning_demo`
+- [../../../src/dual_nero_moveit_config/config/dual_nero_description.ros2_control.xacro](../../../src/dual_nero_moveit_config/config/dual_nero_description.ros2_control.xacro) 仍使用 `mock_components/GenericSystem`
+- [../../../src/dual_nero_moveit_config/launch/demo.launch.py](../../../src/dual_nero_moveit_config/launch/demo.launch.py) 仍然只代表 `planning_demo`
 - 当前 bridge 的 `FollowJointTrajectory` 是执行适配层，不是原生 `ros2_control` controller
 
 ## 命名规范

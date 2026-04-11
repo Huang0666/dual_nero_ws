@@ -16,9 +16,9 @@ P1 已落地结果：
 
 P1 已完成的真实执行链不是 native `ros2_control` hardware plugin，而是：
 
-- 以 [../src/dual_nero_driver](../src/dual_nero_driver) 作为唯一硬件后端
-- 以 [../src/dual_nero_bridge](../src/dual_nero_bridge) 作为 ROS 2 真实执行桥
-- 以 [../src/dual_nero_bringup](../src/dual_nero_bringup) 作为 operator-facing 入口
+- 以 [../../../../src/dual_nero_driver](../../../../src/dual_nero_driver) 作为唯一硬件后端
+- 以 [../../../../src/dual_nero_bridge](../../../../src/dual_nero_bridge) 作为 ROS 2 真实执行桥
+- 以 [../../../../src/dual_nero_bringup](../../../../src/dual_nero_bringup) 作为 operator-facing 入口
 
 这一实现仍满足 P1 合同的核心要求：
 
@@ -72,15 +72,15 @@ P1 新增的真实执行入口如下：
 
 ## 与现有包的边界
 
-- [../src/dual_nero_description](../src/dual_nero_description)
+- [../../../../src/dual_nero_description](../../../../src/dual_nero_description)
   - 继续只负责 `display`
-- [../src/dual_nero_moveit_config](../src/dual_nero_moveit_config)
+- [../../../../src/dual_nero_moveit_config](../../../../src/dual_nero_moveit_config)
   - 继续只负责 `planning_demo`
-- [../src/dual_nero_driver](../src/dual_nero_driver)
+- [../../../../src/dual_nero_driver](../../../../src/dual_nero_driver)
   - 继续作为唯一 `pyAgxArm` 适配层
-- [../src/dual_nero_bridge](../src/dual_nero_bridge)
+- [../../../../src/dual_nero_bridge](../../../../src/dual_nero_bridge)
   - 负责真实执行桥
-- [../src/dual_nero_bringup](../src/dual_nero_bringup)
+- [../../../../src/dual_nero_bringup](../../../../src/dual_nero_bringup)
   - 负责真机入口和 operator 默认参数
 
 ## 限制与下一阶段

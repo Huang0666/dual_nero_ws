@@ -5,7 +5,14 @@
 ## 阶段说明
 
 - P2 已验收完成
-- 当前进入 P3 准备阶段
+- 当前进入 P3：
+  - P3-A：故障恢复 SOP 标准化
+  - P3-B：MoveIt 执行链系统化验证
+  - P3-C：USB-CAN 固定命名（暂缓）
+
+P3-A 当前正式文档：
+
+- [../../docs/human/phases/p3/recovery_sop.md](../../docs/human/phases/p3/recovery_sop.md)
 
 ## 启动入口
 
@@ -41,3 +48,8 @@ launch 层不负责：
 - `true`：运行时 preflight gate 开启
 - `false`：运行时 preflight gate 关闭
 - 启动期检查始终执行，不受该参数影响
+
+## 当前 P3-A 约束
+
+- 现场恢复优先按 SOP 走，不在 bringup 文档里复制第二套故障处置步骤
+- 继续保持 bridge 路线，不切 native plugin

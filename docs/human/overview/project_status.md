@@ -9,13 +9,13 @@
 
 参考：
 
-- [p2_acceptance_report.md](p2_acceptance_report.md)
+- [../phases/p2/acceptance_report.md](../phases/p2/acceptance_report.md)
 
 ## 当前阶段
 
-- 已完成：`P1 Final Cleanup`
-- 已完成：`P2 Stabilization and Engineering`
-- 进行中：`P3 Formal Execution Validation`
+- 已完成：`P1 最小真实执行链`
+- 已完成：`P2 preflight 稳定化与工程化`
+- 进行中：`P3 正式执行验证`
 
 ## P2 已完成内容
 
@@ -28,8 +28,17 @@
 ## 当前最高优先级
 
 1. P3-A：故障恢复 SOP 标准化
-2. P3-B：MoveIt -> action 真机执行验证
+2. P3-B：MoveIt 执行链系统化验证
 3. P3-C：USB-CAN 固定命名与映射稳定化（待办）
+
+## P3-A 当前交付物
+
+- 正式 SOP：
+  - [../phases/p3/recovery_sop.md](../phases/p3/recovery_sop.md)
+- 迁移/重启手册：
+  - [../operations/migration_runbook.md](../operations/migration_runbook.md)
+- 运维问题索引：
+  - [../operations/issue_index.md](../operations/issue_index.md)
 
 ## 主要风险
 

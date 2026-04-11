@@ -5,7 +5,14 @@
 ## 阶段说明
 
 - P2 preflight 稳定化已验收完成
-- 当前进入 P3（映射稳定化 + 正式执行验证）
+- 当前进入 P3：
+  - P3-A：故障恢复 SOP 标准化
+  - P3-B：MoveIt 执行链系统化验证
+  - P3-C：USB-CAN 固定命名（暂缓）
+
+P3-A 当前正式文档：
+
+- [../../docs/human/phases/p3/recovery_sop.md](../../docs/human/phases/p3/recovery_sop.md)
 
 ## 主要职责
 
@@ -44,3 +51,8 @@ action/topic 路径统一使用：
 - `STATE_UNAVAILABLE`
 - `STATE_TOO_OLD`
 - `START_DEVIATION_TOO_LARGE`
+
+## 当前 P3-A 约束
+
+- 故障恢复先按 SOP 执行，再做 bridge 代码层排查
+- 不把 USB-CAN 固定命名写成当前已完成能力

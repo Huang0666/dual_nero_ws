@@ -67,7 +67,7 @@ def main() -> int:
             relative_path=Path("config") / "hardware_params.yaml",
         ),
         "baseline": resolve_doc_path(args.repo_root, "project_baseline.md"),
-        "contract": resolve_doc_path(args.repo_root, "p1_driver_contract.md"),
+        "contract": resolve_doc_path(args.repo_root, "driver_contract.md"),
     }
     errors: list[str] = []
     errors.extend(check_ros2_control(paths["ros2_control"]))
@@ -88,7 +88,15 @@ def main() -> int:
 
 
 def resolve_doc_path(explicit_root: str | None, name: str) -> Path:
-    return resolve_path(explicit_root, package_name=None, relative_path=Path("docs") / name)
+    docs_root = resolve_path(explicit_root, package_name=None, relative_path=Path("docs"))
+    matches = sorted(docs_root.rglob(name))
+    if not matches:
+        raise FileNotFoundError(f"Could not find document named '{name}' under {docs_root}.")
+    if len(matches) > 1:
+        raise FileNotFoundError(
+            f"Found multiple documents named '{name}' under {docs_root}: {matches}"
+        )
+    return matches[0]
 
 
 def resolve_path(

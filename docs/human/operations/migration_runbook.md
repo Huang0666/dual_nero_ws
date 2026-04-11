@@ -5,7 +5,12 @@
 - 新电脑部署
 - 环境重建
 - 同事交接
-- 重启/重插后的现场恢复
+- 重启后的标准启动
+
+说明：
+
+- 现场故障处置以 [../phases/p3/recovery_sop.md](../phases/p3/recovery_sop.md) 为准
+- 本文档偏环境准备、标准启动和迁移交接
 
 ## 当前阶段
 
@@ -15,7 +20,7 @@
 
 参考：
 
-- [p2_acceptance_report.md](p2_acceptance_report.md)
+- [../phases/p2/acceptance_report.md](../phases/p2/acceptance_report.md)
 
 ## 依赖前提
 
@@ -52,7 +57,7 @@ sudo ip link set can1 up
 - USB 重插后先重确认映射再重启 launch
 - `gs_usb` 不要依赖 `restart-ms`
 
-## 验证顺序
+## 标准启动顺序
 
 1. 左臂只读
 2. 右臂只读
@@ -60,6 +65,15 @@ sudo ip link set can1 up
 4. 启动只读并检查 `/joint_states --once`
 5. gate 负例（`ALLOW_MOTION_DISABLED`）
 6. 动作模式 action/topic 正例与负例
+
+## 故障恢复入口
+
+如遇以下问题，不要继续在本文档里临时排障，直接跳到 SOP：
+
+- `BUS-OFF / STOPPED`
+- `/joint_states --once` 阻塞
+- 单臂掉线导致 degraded
+- 左右臂映射疑似错位
 
 ## 单臂测试命令
 

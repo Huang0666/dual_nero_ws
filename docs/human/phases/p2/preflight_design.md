@@ -50,11 +50,17 @@
 ## 验收状态
 
 - 已实现并完成现场验收
-- 详见 [p2_acceptance_report.md](p2_acceptance_report.md)
+- 详见 [acceptance_report.md](acceptance_report.md)
 
 ## 下一阶段
 
-P3 重点：
+P3 当前拆分：
 
-- USB-CAN 固定命名与映射稳定化
-- MoveIt 执行链路正式验证与重复性验证
+- P3-A：故障恢复 SOP 标准化
+- P3-B：MoveIt 执行链系统化验证
+- P3-C：USB-CAN 固定命名（暂缓）
+
+说明：
+
+- P3-C 已保留为待办，不在当前周期落地
+- 当前优先推进 P3-A，再进入 P3-B
