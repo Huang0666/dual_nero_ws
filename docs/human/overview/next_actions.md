@@ -24,11 +24,14 @@
 
 - 最小验证 CLI 已落地：
   - `ros2 run dual_nero_bridge validate_moveit_pipeline`
+- 当前主验证路径切换为：
+  - `--bridge-final-point-execute`
+- `--execute` 保留用于观察 MoveIt 原生 `ExecuteTrajectory` 与 bridge 单点合同的兼容性
 - 下一步重点是现场补齐：
   - 左臂规划
   - 右臂规划
-  - 左臂执行
-  - 右臂执行
+  - 左臂末点执行
+  - 右臂末点执行
   - 只读负例
 - 正式计划文档：
   - [../phases/p3/moveit_validation_plan.md](../phases/p3/moveit_validation_plan.md)

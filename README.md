@@ -63,7 +63,7 @@ ros2 run dual_nero_bridge send_right_arm_goal \
 
 ```bash
 ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm
-ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --execute
+ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --bridge-final-point-execute
 ```
 
 ## 注意事项

@@ -63,10 +63,32 @@ ros2 run dual_nero_bridge validate_moveit_pipeline --group right_arm --execute
 - 是否通过：
 - 关键输出：
 
+### 左臂 bridge 末点执行
+
+```bash
+ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --bridge-final-point-execute
+```
+
+结果：
+
+- 是否通过：
+- 关键输出：
+
+### 右臂 bridge 末点执行
+
+```bash
+ros2 run dual_nero_bridge validate_moveit_pipeline --group right_arm --bridge-final-point-execute
+```
+
+结果：
+
+- 是否通过：
+- 关键输出：
+
 ### 只读负例
 
 ```bash
-ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --execute
+ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --bridge-final-point-execute
 ```
 
 结果：
@@ -104,7 +126,8 @@ ros2 run dual_nero_bridge validate_moveit_pipeline --group dual_arms
 ## 结论
 
 - MoveIt 规划是否稳定：
-- MoveIt 执行是否稳定：
+- MoveIt 原生 `ExecuteTrajectory` 是否与 bridge 兼容：
+- bridge 末点执行是否稳定：
 - bridge / preflight 语义是否清晰：
 - 是否达到 P3-B 退出标准：
 

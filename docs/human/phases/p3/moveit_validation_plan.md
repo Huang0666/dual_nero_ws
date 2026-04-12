@@ -14,6 +14,9 @@
 - P3-A 故障恢复 SOP 已完成，可作为 P3-B 的前置恢复流程
 - 已新增正式 CLI：
   - `ros2 run dual_nero_bridge validate_moveit_pipeline`
+- 已支持两条执行路径：
+  - `--execute`：直接走 MoveIt `ExecuteTrajectory`
+  - `--bridge-final-point-execute`：将 MoveIt 规划结果压成末点单点 goal，再走当前 bridge 合同
 - 已将左右臂最小 action 客户端补成 `ros2 run` 正式入口：
   - `ros2 run dual_nero_bridge send_left_arm_goal`
   - `ros2 run dual_nero_bridge send_right_arm_goal`
@@ -81,10 +84,8 @@ ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --execute
 预期：
 
 - 规划摘要 `error_name=SUCCESS`
-- 执行摘要 `error_name=SUCCESS`
-- `real_execution_node` 日志出现：
-  - `source=trajectory`
-  - `preflight result -> ok=True, code=OK`
+- 若当前 MoveIt 输出多点轨迹，可能出现 `CONTROL_FAILED`
+- 本命令当前主要用于观察“MoveIt 原生 execute 与 bridge 单点合同是否兼容”
 
 ### 4. 右臂 MoveIt 规划 + 执行
 
@@ -94,9 +95,35 @@ ros2 run dual_nero_bridge validate_moveit_pipeline --group right_arm --execute
 
 预期：
 
-- 规划与执行均成功
+- 规划成功
+- 若为多点轨迹，执行可能同样出现 `CONTROL_FAILED`
 
-### 5. 双臂 MoveIt 规划（可选增强）
+### 5. 左臂 MoveIt 规划 + bridge 末点执行
+
+```bash
+ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --bridge-final-point-execute
+```
+
+预期：
+
+- 规划摘要 `error_name=SUCCESS`
+- bridge 执行摘要 `error_name=SUCCESSFUL`
+- `real_execution_node` 日志出现：
+  - `source=trajectory`
+  - `preflight result -> ok=True, code=OK`
+
+### 6. 右臂 MoveIt 规划 + bridge 末点执行
+
+```bash
+ros2 run dual_nero_bridge validate_moveit_pipeline --group right_arm --bridge-final-point-execute
+```
+
+预期：
+
+- 规划成功
+- bridge 单点执行成功
+
+### 7. 双臂 MoveIt 规划（可选增强）
 
 ```bash
 ros2 run dual_nero_bridge validate_moveit_pipeline --group dual_arms
@@ -107,12 +134,12 @@ ros2 run dual_nero_bridge validate_moveit_pipeline --group dual_arms
 - 本项优先级低于左右单臂
 - 通过标准是规划成功，不要求当前轮必须执行真实双臂轨迹
 
-### 6. 只读模式负例
+### 8. 只读模式负例
 
 在 `allow_motion:=false` 下执行：
 
 ```bash
-ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --execute
+ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --bridge-final-point-execute
 ```
 
 预期：
@@ -127,9 +154,11 @@ ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --execute
 | --- | --- | --- |
 | 左臂规划 | `validate_moveit_pipeline --group left_arm` | `error_name=SUCCESS` |
 | 右臂规划 | `validate_moveit_pipeline --group right_arm` | `error_name=SUCCESS` |
-| 左臂执行 | `validate_moveit_pipeline --group left_arm --execute` | MoveIt 执行成功，bridge 日志 `code=OK` |
-| 右臂执行 | `validate_moveit_pipeline --group right_arm --execute` | MoveIt 执行成功，bridge 日志 `code=OK` |
-| 只读负例 | `allow_motion:=false` + `--execute` | 规划成功，执行失败，bridge 日志 `ALLOW_MOTION_DISABLED` |
+| 左臂原生执行 | `validate_moveit_pipeline --group left_arm --execute` | 用于观察原生 `ExecuteTrajectory` 兼容性 |
+| 右臂原生执行 | `validate_moveit_pipeline --group right_arm --execute` | 用于观察原生 `ExecuteTrajectory` 兼容性 |
+| 左臂末点执行 | `validate_moveit_pipeline --group left_arm --bridge-final-point-execute` | bridge 单点执行成功，日志 `code=OK` |
+| 右臂末点执行 | `validate_moveit_pipeline --group right_arm --bridge-final-point-execute` | bridge 单点执行成功，日志 `code=OK` |
+| 只读负例 | `allow_motion:=false` + `--bridge-final-point-execute` | 规划成功，执行失败，bridge 日志 `ALLOW_MOTION_DISABLED` |
 | 双臂规划 | `validate_moveit_pipeline --group dual_arms` | 可选，规划成功即可 |
 
 ## 日志采集要求
@@ -139,6 +168,13 @@ P3-B 正式验收时至少保留以下日志：
 - `validate_moveit_pipeline` 的 preview / plan / execute JSON
 - `real_execution_node` 中对应 `source=trajectory` 的日志
 - 负例时的 bridge reject 日志
+
+## 当前结论边界
+
+- MoveIt 默认会返回多点轨迹
+- 当前 bridge 合同只接受单点 trajectory
+- 因此 `--execute` 可能出现 `CONTROL_FAILED`
+- P3-B 当前主验收路径应使用 `--bridge-final-point-execute`
 
 ## 预期交付
 

@@ -24,6 +24,7 @@
 - P2 已完成现场验收
 - 文档结构已切换到 `human/` 与 `agent/` 双视图
 - P3-B 最小 MoveIt 验证 CLI 已加入 `dual_nero_bridge`
+- P3-B 当前主验证路径为 `--bridge-final-point-execute`
 
 ## 当前应优先参考
 

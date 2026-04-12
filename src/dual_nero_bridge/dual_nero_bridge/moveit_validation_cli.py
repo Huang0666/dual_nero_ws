@@ -7,12 +7,14 @@ from copy import deepcopy
 from dataclasses import asdict, dataclass
 
 import rclpy
+from control_msgs.action import FollowJointTrajectory
 from moveit_msgs.action import ExecuteTrajectory
 from moveit_msgs.msg import Constraints, JointConstraint, MoveItErrorCodes, RobotState
 from moveit_msgs.srv import GetMotionPlan
 from rclpy.action import ActionClient
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
 LEFT_ARM_JOINTS = [
     "left_joint1",
@@ -85,6 +87,19 @@ class MoveItExecutionSummary:
         return json.dumps(asdict(self), ensure_ascii=False, indent=2, sort_keys=True)
 
 
+@dataclass(slots=True)
+class BridgeExecutionSummary:
+    group_name: str
+    mode: str
+    target_name: str
+    error_code: int
+    error_name: str
+    error_string: str
+
+    def to_pretty_json(self) -> str:
+        return json.dumps(asdict(self), ensure_ascii=False, indent=2, sort_keys=True)
+
+
 class MoveItValidationClient(Node):
     def __init__(
         self,
@@ -126,6 +141,18 @@ class MoveItValidationClient(Node):
             ExecuteTrajectory,
             self.execute_action_name,
         )
+        self._bridge_action_clients = {
+            "left_arm": ActionClient(
+                self,
+                FollowJointTrajectory,
+                "/left_arm_controller/follow_joint_trajectory",
+            ),
+            "right_arm": ActionClient(
+                self,
+                FollowJointTrajectory,
+                "/right_arm_controller/follow_joint_trajectory",
+            ),
+        }
 
     def build_preview(self) -> MoveItValidationPreview:
         current = self._wait_for_group_positions()
@@ -196,7 +223,8 @@ class MoveItValidationClient(Node):
 
         goal = ExecuteTrajectory.Goal()
         goal.trajectory = response.motion_plan_response.trajectory
-        goal.controller_names = list(self.controller_names)
+        if hasattr(goal, "controller_names"):
+            goal.controller_names = list(self.controller_names)
 
         send_goal_future = self._execute_client.send_goal_async(goal)
         rclpy.spin_until_future_complete(self, send_goal_future, timeout_sec=self.timeout_sec)
@@ -222,6 +250,57 @@ class MoveItValidationClient(Node):
             message=error_details["message"],
             source=error_details["source"],
             state=str(getattr(result, "state", "")),
+        )
+
+    def execute_bridge_final_point(
+        self,
+        response: GetMotionPlan.Response,
+    ) -> BridgeExecutionSummary:
+        if self.group_name not in {"left_arm", "right_arm"}:
+            raise RuntimeError(
+                "bridge-final-point execute currently supports only left_arm and right_arm."
+            )
+
+        trajectory = response.motion_plan_response.trajectory.joint_trajectory
+        if not trajectory.points:
+            raise RuntimeError("MoveIt returned an empty joint_trajectory.")
+
+        final_point = trajectory.points[-1]
+        client = self._bridge_action_clients[self.group_name]
+        target_name = f"/{self.group_name.replace('_arm', '')}_arm_controller/follow_joint_trajectory"
+        if not client.wait_for_server(timeout_sec=self.timeout_sec):
+            raise RuntimeError(
+                f"Bridge action server {target_name} was not available within {self.timeout_sec:.1f}s."
+            )
+
+        goal = FollowJointTrajectory.Goal()
+        goal.trajectory = JointTrajectory()
+        goal.trajectory.joint_names = list(self.joint_names)
+        goal.trajectory.points = [self._clone_final_point(final_point)]
+
+        send_goal_future = client.send_goal_async(goal)
+        rclpy.spin_until_future_complete(self, send_goal_future, timeout_sec=self.timeout_sec)
+        goal_handle = send_goal_future.result()
+        if goal_handle is None:
+            raise RuntimeError(f"Bridge final-point goal request to {target_name} timed out.")
+        if not goal_handle.accepted:
+            raise RuntimeError(f"Bridge final-point goal was rejected by {target_name}.")
+
+        result_future = goal_handle.get_result_async()
+        rclpy.spin_until_future_complete(self, result_future, timeout_sec=self.timeout_sec)
+        result_handle = result_future.result()
+        if result_handle is None:
+            raise RuntimeError(f"Bridge final-point result wait on {target_name} timed out.")
+
+        result = result_handle.result
+        error_code = int(result.error_code)
+        return BridgeExecutionSummary(
+            group_name=self.group_name,
+            mode="bridge_final_point",
+            target_name=target_name,
+            error_code=error_code,
+            error_name=follow_joint_trajectory_error_name(error_code),
+            error_string=str(result.error_string),
         )
 
     def _build_start_state(self) -> RobotState:
@@ -253,6 +332,15 @@ class MoveItValidationClient(Node):
         constraint.tolerance_below = self.goal_tolerance
         constraint.weight = 1.0
         return constraint
+
+    def _clone_final_point(self, point: JointTrajectoryPoint) -> JointTrajectoryPoint:
+        cloned = JointTrajectoryPoint()
+        cloned.positions = list(point.positions)
+        cloned.velocities = list(point.velocities)
+        cloned.accelerations = list(point.accelerations)
+        cloned.effort = list(point.effort)
+        cloned.time_from_start = point.time_from_start
+        return cloned
 
     def _wait_for_group_positions(self) -> list[float]:
         deadline = self.get_clock().now().nanoseconds + int(self.timeout_sec * 1e9)
@@ -359,6 +447,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Actually send ExecuteTrajectory after the plan succeeds.",
     )
+    parser.add_argument(
+        "--bridge-final-point-execute",
+        action="store_true",
+        help="Execute only the final MoveIt joint point through the bridge single-point action contract.",
+    )
     return parser
 
 
@@ -379,8 +472,22 @@ def _read_moveit_error_details(error_code: MoveItErrorCodes) -> dict[str, str | 
     }
 
 
+def follow_joint_trajectory_error_name(code: int) -> str:
+    for name, value in vars(FollowJointTrajectory.Result).items():
+        if name.isupper() and isinstance(value, int) and value == code:
+            return name
+    return f"UNKNOWN_{code}"
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.execute and args.bridge_final_point_execute:
+        print(
+            "validate_moveit_pipeline failed: --execute and --bridge-final-point-execute are mutually exclusive.",
+            file=sys.stderr,
+        )
+        return 2
+
     rclpy.init()
     node = MoveItValidationClient(
         group_name=args.group,
@@ -408,14 +515,21 @@ def main(argv: list[str] | None = None) -> int:
             return 1
 
         if not args.execute:
-            print(
-                "Plan computed successfully. Re-run with --execute to send ExecuteTrajectory."
-            )
-            return 0
+            if not args.bridge_final_point_execute:
+                print(
+                    "Plan computed successfully. Re-run with --execute to send ExecuteTrajectory, "
+                    "or with --bridge-final-point-execute to send only the final point through the bridge."
+                )
+                return 0
 
-        execute_summary = node.execute(plan_response)
-        print(execute_summary.to_pretty_json())
-        return 0 if execute_summary.error_code == MoveItErrorCodes.SUCCESS else 1
+        if args.execute:
+            execute_summary = node.execute(plan_response)
+            print(execute_summary.to_pretty_json())
+            return 0 if execute_summary.error_code == MoveItErrorCodes.SUCCESS else 1
+
+        bridge_summary = node.execute_bridge_final_point(plan_response)
+        print(bridge_summary.to_pretty_json())
+        return 0 if bridge_summary.error_code == FollowJointTrajectory.Result.SUCCESSFUL else 1
     except Exception as exc:
         print(f"validate_moveit_pipeline failed: {exc}", file=sys.stderr)
         return 1

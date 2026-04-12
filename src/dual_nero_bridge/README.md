@@ -62,6 +62,6 @@ action/topic 路径统一使用：
 
 ```bash
 ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm
-ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --execute
-ros2 run dual_nero_bridge validate_moveit_pipeline --group right_arm --execute
+ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --bridge-final-point-execute
+ros2 run dual_nero_bridge validate_moveit_pipeline --group right_arm --bridge-final-point-execute
 ```
