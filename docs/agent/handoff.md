@@ -4,42 +4,33 @@
 
 - P1 已完成
 - P2 已完成并通过现场验收
-- 当前进入 P3
+- P3 主体已完成
+- 当前进入 `P4 目标定义`
 
-## 当前优先级
+## 当前总目标
 
-1. P3-A：故障恢复 SOP 标准化
-2. P3-B：MoveIt 执行链系统化验证
-3. P3-C：USB-CAN 固定命名（暂缓）
+- 双臂协调运动
+- 避障
+- 视觉接入
+- 简单抓取任务
 
 ## 当前推荐入口
 
 - 项目状态：[../human/overview/project_status.md](../human/overview/project_status.md)
 - 下一步任务：[../human/overview/next_actions.md](../human/overview/next_actions.md)
-- P3-A 恢复 SOP：[../human/phases/p3/recovery_sop.md](../human/phases/p3/recovery_sop.md)
-- P3-B 计划：[../human/phases/p3/moveit_validation_plan.md](../human/phases/p3/moveit_validation_plan.md)
-- P3-B 报告：[../human/phases/p3/moveit_validation_report.md](../human/phases/p3/moveit_validation_report.md)
+- P3 恢复 SOP：[../human/phases/p3/recovery_sop.md](../human/phases/p3/recovery_sop.md)
+- P3 验证报告：[../human/phases/p3/moveit_validation_report.md](../human/phases/p3/moveit_validation_report.md)
 - 运维问题索引：[../human/operations/issue_index.md](../human/operations/issue_index.md)
 
-## 当前最小恢复命令
+## 当前有效结论
 
-```bash
-source /opt/ros/humble/setup.bash
-source install/setup.bash
-
-sudo ip link set can0 down || true
-sudo ip link set can1 down || true
-sudo ip link set can0 type can bitrate 1000000
-sudo ip link set can1 type can bitrate 1000000
-sudo ip link set can0 up
-sudo ip link set can1 up
-```
+- 当前 bridge 路线已具备单臂 MoveIt 主路径执行能力。
+- 当前正式路径不是原生 `ExecuteTrajectory`，而是 `bridge-final-point`。
+- P3-C 固定命名保持暂缓，不阻塞当前路线。
+- 下一步不是继续零散验证，而是先定义 P4。
 
 ## 当前注意事项
 
 - 测试脚本和 bridge launch 不要并发占同一套硬件
-- `gs_usb` 不要依赖 `restart-ms`
-- P3-B 现在优先使用 `ros2 run dual_nero_bridge validate_moveit_pipeline`
-- P3-B 验证命令必须在 `real_hardware.launch.py` 持续运行时从另一个终端执行
-- 原生 `--execute` 当前仅用于兼容性观察，不是正式执行路径
-- P3-C 当前不做
+- `real_hardware.launch.py` 运行时，验证命令必须从另一个终端执行
+- 速度/加速度限位当前是保守占位值，不是厂家真值

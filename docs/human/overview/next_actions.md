@@ -2,53 +2,51 @@
 
 ## 当前阶段
 
-- 当前阶段：`P3 正式执行验证`
-- P2 已完成并验收通过
+- 当前阶段：`P4 目标定义`
+- P1、P2、P3 主体已完成
 
-## 优先级 A：故障恢复 SOP 标准化
+## 当前总目标
 
-- 本项已进入落地阶段，正式文档见：
-  - [../phases/p3/recovery_sop.md](../phases/p3/recovery_sop.md)
-- 统一以下故障的现场处置步骤：
-  - BUS-OFF / STOPPED
-  - degraded 模式（单臂不可用）
-  - 重连后映射错位
-- 明确每种故障的：
-  - 触发条件
-  - 诊断命令
-  - 恢复步骤
-  - 恢复后 smoke 检查
-- 要求非原开发者按文档可独立恢复
+- 双臂协调运动
+- 避障
+- 视觉接入
+- 简单抓取任务
 
-## 优先级 B：MoveIt 执行验证
+## 优先级 A：定义 P4 的任务目标
 
-- 最小验证 CLI 已落地：
-  - `ros2 run dual_nero_bridge validate_moveit_pipeline`
-- 当前主验证路径切换为：
-  - `--bridge-final-point-execute`
-- `--execute` 保留用于观察 MoveIt 原生 `ExecuteTrajectory` 与 bridge 单点合同的兼容性
-- 当前已完成：
-  - 左臂规划
-  - 右臂规划
-  - 左臂末点执行
-  - 右臂末点执行
-  - 只读负例
-- 当前剩余收尾项：
-  - 补 `dual_arms` 规划（可选增强）
-  - 用厂家真值替换 MoveIt 当前保守速度/加速度占位限值
-  - 持续完善报告中的原始输出归档
-- 正式计划文档：
-  - [../phases/p3/moveit_validation_plan.md](../phases/p3/moveit_validation_plan.md)
-- 正式结果要回填到：
-  - [../phases/p3/moveit_validation_report.md](../phases/p3/moveit_validation_report.md)
+- 不再继续把阶段定义成零散验证项。
+- 先把 P4 明确定义成“从已验证执行链走向真实物理任务”的第一阶段。
+- 需要回答清楚：
+  - P4 先做单臂任务还是双臂任务
+  - P4 是否先做无视觉任务
+  - P4 的验收是“能规划执行”还是“能完成一个真实动作目标”
 
-## 优先级 C：USB-CAN 固定命名（暂缓）
+## 优先级 B：给出 P4-P6 的整体路线
 
-- 该项暂缓，等待批量策略成熟后再实施
-- 先保留任务入口与验收目标，不在当前周期落地
+- 需要把后续阶段和最终目标对齐，而不是继续沿用早期临时编号。
+- 当前建议的规划方向是：
+  - P4：真实物理动作任务闭环
+  - P5：双臂协调运动与避障
+  - P6：视觉接入与简单抓取
+- 该路线还需要正式冻结到文档。
+
+## 优先级 C：保留待办但当前不做
+
+- USB-CAN 固定命名与批量映射稳定化
+- `dual_arms` MoveIt 验证增强项
+- MoveIt 厂家真值速度/加速度参数回填
 
 ## 本阶段不做
 
 - 切换到 native `ros2_control` plugin
 - 大规模架构重写
-- 冻结合同外的命名/协议变更
+- 在未定义任务目标前继续扩散验证范围
+
+## 当前建议入口
+
+- 项目状态：
+  - [project_status.md](project_status.md)
+- P3 验证报告：
+  - [../phases/p3/moveit_validation_report.md](../phases/p3/moveit_validation_report.md)
+- P3 恢复 SOP：
+  - [../phases/p3/recovery_sop.md](../phases/p3/recovery_sop.md)
