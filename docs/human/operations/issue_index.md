@@ -21,3 +21,5 @@
 | `gs_usb` 不支持 `restart-ms` | 带 `restart-ms` 的恢复命令会报错 | [P2 验收报告](../phases/p2/acceptance_report.md) | [P3-A 恢复 SOP](../phases/p3/recovery_sop.md) |
 | 测试脚本默认自动失能 | 连续 `test + action` 场景容易误以为硬件异常 | [P1 执行报告](../phases/p1/execution_report.md) / [P1 冒烟报告](../phases/p1/smoke_test_report.md) | [迁移与启动手册](migration_runbook.md) |
 | bridge 仅支持单点 trajectory | 当前不是 native plugin，`FollowJointTrajectory` 仅支持单点目标 | [P1 驱动合同](../phases/p1/driver_contract.md) / [P2 设计说明](../phases/p2/preflight_design.md) | [P2 设计说明](../phases/p2/preflight_design.md) |
+| MoveIt 原生 `ExecuteTrajectory` 与 bridge 单点合同不兼容 | MoveIt 默认输出多点轨迹，当前原生执行会触发 `CONTROL_FAILED` | [P3-B 验证报告](../phases/p3/moveit_validation_report.md) | [P3-B 验证计划](../phases/p3/moveit_validation_plan.md) |
+| MoveIt 速度/加速度限位缺少厂家真值 | 当前已补保守占位值，但还不是正式动力学参数 | [P3-B 验证报告](../phases/p3/moveit_validation_report.md) | [P3-B 验证报告](../phases/p3/moveit_validation_report.md) |

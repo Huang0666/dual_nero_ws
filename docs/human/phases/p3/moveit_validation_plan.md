@@ -20,7 +20,11 @@
 - 已将左右臂最小 action 客户端补成 `ros2 run` 正式入口：
   - `ros2 run dual_nero_bridge send_left_arm_goal`
   - `ros2 run dual_nero_bridge send_right_arm_goal`
-- 现场执行结果尚未正式补入报告
+- 当前主路径现场结果：
+  - 左右臂规划通过
+  - 左右臂 `bridge-final-point` 执行通过
+  - 只读负例返回 `ALLOW_MOTION_DISABLED`
+  - 原生 `ExecuteTrajectory` 因多点轨迹与单点 bridge 合同不兼容，不作为正式执行路径
 
 ## 前置条件
 
@@ -31,6 +35,11 @@
 3. 左右臂单臂只读单测均 `rc=0`
 4. `ros2 topic echo /joint_states --once` 可立即返回 14 个关节
 5. `ros2 launch dual_nero_bringup real_hardware.launch.py` 能正常启动并看到 `[bringup]` 日志
+
+补充：
+
+- launch 必须保持运行
+- 验证命令要从另一个终端执行
 
 ## 启动方式
 

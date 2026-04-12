@@ -25,6 +25,7 @@
 - 文档结构已切换到 `human/` 与 `agent/` 双视图
 - P3-B 最小 MoveIt 验证 CLI 已加入 `dual_nero_bridge`
 - P3-B 当前主验证路径为 `--bridge-final-point-execute`
+- P3-B 主路径现场已验证通过：左右臂规划、左右臂末点执行、只读负例
 
 ## 当前应优先参考
 
@@ -38,3 +39,4 @@
 - 不做 P3-C 的固定命名实现
 - 不切架构
 - 不写第二套独立事实正文
+- 不把原生 `ExecuteTrajectory` 写成当前正式执行路径

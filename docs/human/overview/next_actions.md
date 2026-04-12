@@ -27,12 +27,16 @@
 - 当前主验证路径切换为：
   - `--bridge-final-point-execute`
 - `--execute` 保留用于观察 MoveIt 原生 `ExecuteTrajectory` 与 bridge 单点合同的兼容性
-- 下一步重点是现场补齐：
+- 当前已完成：
   - 左臂规划
   - 右臂规划
   - 左臂末点执行
   - 右臂末点执行
   - 只读负例
+- 当前剩余收尾项：
+  - 补 `dual_arms` 规划（可选增强）
+  - 用厂家真值替换 MoveIt 当前保守速度/加速度占位限值
+  - 持续完善报告中的原始输出归档
 - 正式计划文档：
   - [../phases/p3/moveit_validation_plan.md](../phases/p3/moveit_validation_plan.md)
 - 正式结果要回填到：

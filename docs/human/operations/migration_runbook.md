@@ -93,6 +93,11 @@ python3 src/dual_nero_driver/scripts/test_right_arm.py \
 ros2 launch dual_nero_bringup real_hardware.launch.py allow_motion:=false enable_on_start:=false
 ```
 
+说明：
+
+- launch 启动后要保持运行
+- 后续 `ros2 run dual_nero_bridge ...` 命令必须从另一个终端执行
+
 ## action 脚本命令
 
 ```bash
