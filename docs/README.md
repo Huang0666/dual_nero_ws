@@ -22,6 +22,7 @@
 - 当前状态：[human/overview/project_status.md](human/overview/project_status.md)
 - 下一步任务：[human/overview/next_actions.md](human/overview/next_actions.md)
 - 总体路线：[human/overview/roadmap.md](human/overview/roadmap.md)
+- P4 阶段定义：[human/phases/p4/README.md](human/phases/p4/README.md)
 - P3-A 故障恢复 SOP：[human/phases/p3/recovery_sop.md](human/phases/p3/recovery_sop.md)
 - P3-B 验证计划：[human/phases/p3/moveit_validation_plan.md](human/phases/p3/moveit_validation_plan.md)
 - 迁移与标准启动：[human/operations/migration_runbook.md](human/operations/migration_runbook.md)

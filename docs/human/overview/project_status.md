@@ -9,7 +9,7 @@
   - P3-B：MoveIt 主路径已完成现场验证。
   - P3-C：USB-CAN 固定命名保持暂缓，作为后续待办。
 - 当前架构仍为 bridge，未切到 native `ros2_control`。
-- 项目当前进入 `P4 目标定义` 阶段。
+- 项目当前进入 `P4 双臂固定场景任务闭环` 阶段。
 
 参考：
 
@@ -29,14 +29,13 @@
 - 已完成：`P1 最小真实执行链`
 - 已完成：`P2 preflight 稳定化与工程化`
 - 已完成：`P3 恢复 SOP + MoveIt 主路径验证`
-- 进行中：`P4 目标定义与路线拆分`
+- 进行中：`P4 双臂固定场景任务闭环落地与验收`
 
 ## 当前正式可交付路径
 
 - 启动 `real_hardware.launch.py`
-- 通过 MoveIt 完成单臂规划
-- 取规划末点
-- 以单点 `FollowJointTrajectory` 经 bridge 执行
+- 通过 MoveIt 完成单臂规划并以 `bridge-final-point` 执行
+- P4 正式任务入口：`ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync`
 
 说明：
 
@@ -73,6 +72,11 @@
 - 只读模式负例通过，错误码为 `ALLOW_MOTION_DISABLED`
 - `joint_limits.yaml` 已补保守的速度/加速度占位值，TOTG 默认警告已消失
 
+### P4
+
+- 双臂固定场景任务入口 CLI 已落地
+- 任务配置已固化至 `p4_tasks.yaml`
+
 ## 当前未完成但已明确的边界
 
 - `dual_arms` 的 MoveIt 验证还未作为正式阶段目标推进，后续可补。
@@ -82,8 +86,8 @@
 
 ## 当前最高优先级
 
-1. 定义 P4 的任务目标、范围和验收标准
-2. 将 P4 与最终“协调运动/避障/视觉/抓取”目标建立清晰映射
+1. 现场验收 `dual_prep_sync` 双臂任务闭环
+2. 固化任务配置与执行约束（安全位/预备位/返回位）
 3. 保持 P3-C 作为待办入口，不在当前周期实施
 
 ## 总体路线入口

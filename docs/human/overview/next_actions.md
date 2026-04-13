@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-- 当前阶段：`P4 目标定义`
+- 当前阶段：`P4 双臂固定场景任务闭环`
 - P1、P2、P3 主体已完成
 
 ## 当前总目标
@@ -12,33 +12,22 @@
 - 视觉接入
 - 简单抓取任务
 
-## 优先级 A：定义 P4 的任务目标
+## 优先级 A：完成 P4 双臂任务闭环验收
 
-- 不再继续把阶段定义成零散验证项。
-- 先把 P4 明确定义成“从已验证执行链走向真实物理任务”的第一阶段。
-- 需要回答清楚：
-  - P4 的第一个双臂任务样例具体是什么
-  - P4 是否先做无视觉任务
-  - P4 的验收是“能规划执行”还是“能完成一个真实动作目标”
-- 当前阶段定义入口：
-  - [../phases/p4/README.md](../phases/p4/README.md)
+- 在动作模式下执行 `dual_prep_sync`，完成多次重复验证
+- 固化任务安全位/预备位/返回位配置
+- 失败时按 P3-A SOP 处理，不做临时指令拼凑
+- 当前阶段定义入口：[../phases/p4/README.md](../phases/p4/README.md)
 
-## 优先级 B：给出 P4-P6 的整体路线
+## 优先级 B：保持 P4-P6 路线冻结
 
-- 需要把后续阶段和最终目标对齐，而不是继续沿用早期临时编号。
-- 当前建议的规划方向是：
-  - P4：真实物理动作任务闭环
-  - P5：双臂协调运动与避障
-  - P6：视觉接入与简单抓取
-- 该路线还需要正式冻结到文档。
-- 总路线文档：
-  - [roadmap.md](roadmap.md)
+- 路线入口：[roadmap.md](roadmap.md)
 
 ## 优先级 C：保留待办但当前不做
 
 - USB-CAN 固定命名与批量映射稳定化
 - `dual_arms` MoveIt 验证增强项
-- MoveIt 厂家真值速度/加速度参数回填
+- MoveIt 厂家真实速度/加速度参数回填
 
 ## 本阶段不做
 
@@ -48,9 +37,6 @@
 
 ## 当前建议入口
 
-- 项目状态：
-  - [project_status.md](project_status.md)
-- P3 验证报告：
-  - [../phases/p3/moveit_validation_report.md](../phases/p3/moveit_validation_report.md)
-- P3 恢复 SOP：
-  - [../phases/p3/recovery_sop.md](../phases/p3/recovery_sop.md)
+- 项目状态入口：[project_status.md](project_status.md)
+- P3 验证报告入口：[../phases/p3/moveit_validation_report.md](../phases/p3/moveit_validation_report.md)
+- P3 恢复 SOP 入口：[../phases/p3/recovery_sop.md](../phases/p3/recovery_sop.md)

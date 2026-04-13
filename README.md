@@ -13,7 +13,7 @@
 - P1：已完成
 - P2：已完成并通过现场验收
 - 当前执行架构：bridge（未切 native `ros2_control`）
-- 当前阶段：P4 目标定义
+- 当前阶段：P4 双臂固定场景任务闭环
 
 长期目标：
 
@@ -29,6 +29,7 @@
 - P3-A：已完成
 - P3-B：主体已完成
 - P3-C：暂缓
+- P4：双臂固定场景任务入口已落地
 
 当前路线入口：
 
@@ -45,6 +46,16 @@
 ```bash
 ros2 launch dual_nero_bringup real_hardware.launch.py
 ```
+
+## P4 双臂正式任务入口
+
+```bash
+ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync
+```
+
+任务配置：
+
+- `src/dual_nero_bridge/config/p4_tasks.yaml`
 
 ## 推荐启动模式
 

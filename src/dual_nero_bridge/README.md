@@ -5,10 +5,8 @@
 ## 阶段说明
 
 - P2 preflight 稳定化已验收完成
-- 当前进入 P3：
-  - P3-A：故障恢复 SOP 标准化
-  - P3-B：MoveIt 执行链系统化验证
-  - P3-C：USB-CAN 固定命名（暂缓）
+- P3 主体已完成（P3-C 暂缓）
+- 当前进入 P4：双臂固定场景任务闭环
 
 P3-A 当前正式文档：
 
@@ -65,3 +63,13 @@ ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm
 ros2 run dual_nero_bridge validate_moveit_pipeline --group left_arm --bridge-final-point-execute
 ros2 run dual_nero_bridge validate_moveit_pipeline --group right_arm --bridge-final-point-execute
 ```
+
+## P4 正式任务入口
+
+```bash
+ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync
+```
+
+任务配置：
+
+- `config/p4_tasks.yaml`

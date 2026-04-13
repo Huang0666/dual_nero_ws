@@ -61,6 +61,16 @@
 - 本文档
 - [rules.md](rules.md)（若规则有变化）
 
+### 7. 新增 P4 任务入口或任务配置
+
+必须更新：
+
+- [../human/phases/p4/README.md](../human/phases/p4/README.md)
+- [../human/overview/project_status.md](../human/overview/project_status.md)
+- [../human/overview/next_actions.md](../human/overview/next_actions.md)
+- [../human/operations/migration_runbook.md](../human/operations/migration_runbook.md)
+- [current_context.md](current_context.md)
+
 ## 当前关键正文入口
 
 - 状态：[../human/overview/project_status.md](../human/overview/project_status.md)
