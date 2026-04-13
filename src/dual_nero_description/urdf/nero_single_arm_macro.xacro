@@ -48,7 +48,7 @@
       <parent link="${prefix}base_link"/>
       <child link="${prefix}link1"/>
       <axis xyz="0 0 1"/>
-      <limit lower="-2.7" upper="2.7" effort="0" velocity="0"/>
+      <limit lower="-2.7" upper="2.7" effort="50" velocity="1.0"/>
     </joint>
 
     <link name="${prefix}link2">
@@ -65,7 +65,7 @@
       <parent link="${prefix}link1"/>
       <child link="${prefix}link2"/>
       <axis xyz="0 0 1"/>
-      <limit lower="-1.74" upper="1.74" effort="0" velocity="0"/>
+      <limit lower="-1.74" upper="1.74" effort="50" velocity="1.0"/>
     </joint>
 
     <link name="${prefix}link3">
@@ -82,7 +82,7 @@
       <parent link="${prefix}link2"/>
       <child link="${prefix}link3"/>
       <axis xyz="0 0 1"/>
-      <limit lower="-2.75" upper="2.75" effort="0" velocity="0"/>
+      <limit lower="-2.75" upper="2.75" effort="50" velocity="1.0"/>
     </joint>
 
     <link name="${prefix}link4">
@@ -99,7 +99,7 @@
       <parent link="${prefix}link3"/>
       <child link="${prefix}link4"/>
       <axis xyz="0 0 1"/>
-      <limit lower="-1.01" upper="2.14" effort="0" velocity="0"/>
+      <limit lower="-1.01" upper="2.14" effort="50" velocity="1.0"/>
     </joint>
 
     <link name="${prefix}link5">
@@ -116,7 +116,7 @@
       <parent link="${prefix}link4"/>
       <child link="${prefix}link5"/>
       <axis xyz="0 0 1"/>
-      <limit lower="-2.75" upper="2.75" effort="0" velocity="0"/>
+      <limit lower="-2.75" upper="2.75" effort="50" velocity="1.0"/>
     </joint>
 
     <link name="${prefix}link6">
@@ -133,7 +133,7 @@
       <parent link="${prefix}link5"/>
       <child link="${prefix}link6"/>
       <axis xyz="0 0 1"/>
-      <limit lower="-0.73" upper="0.95" effort="0" velocity="0"/>
+      <limit lower="-0.73" upper="0.95" effort="50" velocity="1.0"/>
     </joint>
 
     <link name="${prefix}link7">
@@ -150,7 +150,7 @@
       <parent link="${prefix}link6"/>
       <child link="${prefix}link7"/>
       <axis xyz="0 0 1"/>
-      <limit lower="-1.57" upper="1.57" effort="0" velocity="0"/>
+      <limit lower="-1.57" upper="1.57" effort="50" velocity="1.0"/>
     </joint>
 
     <link name="${prefix}end_effector">

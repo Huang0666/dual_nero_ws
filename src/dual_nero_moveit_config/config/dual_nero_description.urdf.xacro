@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dual_nero_description">
     <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
+    <xacro:arg name="hardware_plugin" default="mock_components/GenericSystem" />
+    <xacro:arg name="use_gz_sim" default="false" />
+    <xacro:arg name="controllers_file" default="" />
 
     <!-- Import dual_nero_description urdf file -->
     <xacro:include filename="$(find dual_nero_description)/urdf/dual_nero_description.xacro" />
@@ -9,6 +12,12 @@
     <xacro:include filename="dual_nero_description.ros2_control.xacro" />
 
 
-    <xacro:dual_nero_description_ros2_control name="FakeSystem" initial_positions_file="$(arg initial_positions_file)"/>
+    <xacro:dual_nero_description_ros2_control
+        name="FakeSystem"
+        initial_positions_file="$(arg initial_positions_file)"
+        hardware_plugin="$(arg hardware_plugin)"
+        use_gz_sim="$(arg use_gz_sim)"
+        controllers_file="$(arg controllers_file)"
+    />
 
 </robot>

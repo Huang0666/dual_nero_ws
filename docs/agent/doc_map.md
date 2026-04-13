@@ -28,6 +28,11 @@
 - 如属于恢复流程，还要更新 [../human/phases/p3/recovery_sop.md](../human/phases/p3/recovery_sop.md)
 - [handoff.md](handoff.md) 中的最小操作摘要
 
+如果新增仿真主线入口，还应更新：
+
+- [../human/operations/simulation_runbook.md](../human/operations/simulation_runbook.md)
+- [../human/overview/architecture_layers.md](../human/overview/architecture_layers.md)
+
 ### 3. 新增现场问题或故障处置经验
 
 必须先更新：

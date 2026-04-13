@@ -12,19 +12,19 @@
 - 视觉接入
 - 简单抓取任务
 
-## 优先级 A：先做 P4 点位与空间建模
+## 优先级 A：切到仿真主线继续推进
+
+- 启动 `simulation.launch.py`
+- 先在 gz sim 中验证 `run_dual_arm_task`
+- 保持 P1-P4 任务入口、MoveIt group、controller 合同不变
+- 当前入口：[../operations/simulation_runbook.md](../operations/simulation_runbook.md)
+
+## 优先级 B：继续做点位与空间建模
 
 - 固定一组可重复回位的初始/安全位
 - 明确左右臂在当前工位下的安全活动空间
 - 再在该空间内定义预备位和任务位
-- 当前阶段定义入口：[../phases/p4/README.md](../phases/p4/README.md)
-- 对齐清单入口：[../operations/hardware_alignment_checklist.md](../operations/hardware_alignment_checklist.md)
-
-## 优先级 B：暂停盲试，保留正式入口
-
-- 暂停继续盲目增大动作幅度试错
-- 保留 `run_dual_arm_task` 作为正式任务入口
-- 等点位建模完成后，再恢复真机验收
+- 当前入口：[../operations/hardware_alignment_checklist.md](../operations/hardware_alignment_checklist.md)
 
 ## 优先级 C：保留待办但当前不做
 

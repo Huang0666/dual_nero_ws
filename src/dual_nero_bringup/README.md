@@ -1,6 +1,6 @@
 # dual_nero_bringup
 
-`dual_nero_bringup` 是真机执行的操作员启动入口。
+`dual_nero_bringup` 是操作员启动入口，当前同时承载真机与仿真主线。
 
 ## 阶段说明
 
@@ -21,6 +21,10 @@ P3 当前正式文档：
 ros2 launch dual_nero_bringup real_hardware.launch.py
 ```
 
+```bash
+ros2 launch dual_nero_bringup simulation.launch.py
+```
+
 ## 职责边界
 
 launch 层负责：
@@ -35,6 +39,11 @@ launch 层不负责：
 
 - 运行时动作决策
 - 运行时 reject/abort 语义判定
+
+当前分工：
+
+- `real_hardware.launch.py`：真机主线
+- `simulation.launch.py`：gz sim 仿真主线
 
 ## 关键参数
 

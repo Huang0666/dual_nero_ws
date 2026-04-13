@@ -75,6 +75,10 @@ ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync --target safe
 
 - `src/dual_nero_bridge/config/p4_tasks.yaml`
 
+当前仿真主线入口：
+
+- [../../operations/simulation_runbook.md](../../operations/simulation_runbook.md)
+
 ## 下一步不再怎么做
 
 - 不再继续盲目放大动作幅度试错

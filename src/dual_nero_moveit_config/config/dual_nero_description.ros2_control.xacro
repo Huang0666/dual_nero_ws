@@ -1,12 +1,14 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:macro name="dual_nero_description_ros2_control" params="name initial_positions_file">
+    <xacro:macro
+        name="dual_nero_description_ros2_control"
+        params="name initial_positions_file hardware_plugin:='mock_components/GenericSystem' use_gz_sim:='false' controllers_file:=''"
+    >
         <xacro:property name="initial_positions" value="${load_yaml(initial_positions_file)['initial_positions']}"/>
 
         <ros2_control name="${name}" type="system">
             <hardware>
-                <!-- By default, set up controllers for simulation. This won't work on real hardware -->
-                <plugin>mock_components/GenericSystem</plugin>
+                <plugin>${hardware_plugin}</plugin>
             </hardware>
             <joint name="left_joint1">
                 <command_interface name="position"/>
@@ -108,5 +110,13 @@
             </joint>
 
         </ros2_control>
+
+        <xacro:if value="${use_gz_sim == 'true'}">
+            <gazebo>
+                <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+                    <parameters>${controllers_file}</parameters>
+                </plugin>
+            </gazebo>
+        </xacro:if>
     </xacro:macro>
 </robot>

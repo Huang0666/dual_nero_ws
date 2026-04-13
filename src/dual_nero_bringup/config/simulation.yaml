@@ -1,0 +1,8 @@
+simulation:
+  backend: sim_gz
+  with_moveit: true
+  with_rviz: true
+  use_sim_time: true
+  world_file: ""
+  robot_name: dual_nero
+  z_offset: 0.0

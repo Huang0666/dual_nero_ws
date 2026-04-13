@@ -10,6 +10,7 @@
   - P3-C：USB-CAN 固定命名保持暂缓，作为后续待办。
 - 当前架构仍为 bridge，未切到 native `ros2_control`。
 - 项目当前进入 `P4 双臂固定场景任务闭环` 阶段。
+- 真机成果保留，但当前后续开发主线切到 `Gazebo Harmonic / gz sim` 仿真。
 
 参考：
 
@@ -78,6 +79,7 @@
 - 任务配置已固化至 `p4_tasks.yaml`
 - 已支持正式入口直接回固定安全位
 - 已修正任务结果等待与 stop 清理的工程问题
+- 已新增仿真主线入口，保持任务层和执行合同层不变
 
 ## 当前阶段卡点
 
@@ -96,12 +98,13 @@
 ## 当前最高优先级
 
 1. 先完成 P4 的初始位/安全位/预备位建模
-2. 明确双臂在当前工位下的可活动安全空间
-3. 再回到真机执行 `dual_prep_sync` 正式验收
+2. 先在 gz sim 中恢复 P4 / P5 后续开发
+3. 等工位和模型对齐后，再回到真机执行 `dual_prep_sync` 正式验收
 
 ## 总体路线入口
 
 - [roadmap.md](roadmap.md)
+- [architecture_layers.md](architecture_layers.md)
 - P4 阶段定义：[../phases/p4/README.md](../phases/p4/README.md)
 
 ## 当前风险

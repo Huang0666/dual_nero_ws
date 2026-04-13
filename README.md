@@ -14,6 +14,7 @@
 - P2：已完成并通过现场验收
 - 当前执行架构：bridge（未切 native `ros2_control`）
 - 当前阶段：P4 双臂固定场景任务闭环
+- 当前后续开发主线：Gazebo / gz sim 仿真
 
 长期目标：
 
@@ -45,6 +46,12 @@
 
 ```bash
 ros2 launch dual_nero_bringup real_hardware.launch.py
+```
+
+## 仿真入口
+
+```bash
+ros2 launch dual_nero_bringup simulation.launch.py
 ```
 
 ## P4 双臂正式任务入口

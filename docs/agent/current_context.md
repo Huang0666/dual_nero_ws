@@ -22,6 +22,7 @@
 - P4 双臂正式任务入口已落地：`run_dual_arm_task --task dual_prep_sync`
 - P4 已支持通过正式入口直接回固定安全位：`--target safe`
 - P4 已修正结果等待与 stop cleanup 的工程问题
+- 仿真主线已切到 `Gazebo Harmonic / gz sim` 方向
 
 ## 当前正式路径
 
@@ -32,7 +33,7 @@
 
 ## 当前问题判断
 
-当前 P4 的主要问题不是底层链路，而是现场任务空间与点位定义。
+当前主开发环境切到仿真层。真机成果保留，但当前 P4 的主要问题仍是现场任务空间与点位定义。
 
 具体表现：
 
@@ -42,9 +43,9 @@
 
 ## 当前优先级
 
-1. 固定初始位/安全位
-2. 做 P4 点位与空间建模
-3. 再恢复真机任务验收
+1. 在 gz sim 中恢复 P4 后续开发
+2. 继续做 P4 点位与空间建模
+3. 等工位和模型对齐后，再恢复真机任务验收
 
 ## 当前不做
 
@@ -56,6 +57,8 @@
 
 - Human 状态入口：[../human/overview/project_status.md](../human/overview/project_status.md)
 - Human 任务入口：[../human/overview/next_actions.md](../human/overview/next_actions.md)
+- Human 分层入口：[../human/overview/architecture_layers.md](../human/overview/architecture_layers.md)
 - P4 阶段定义入口：[../human/phases/p4/README.md](../human/phases/p4/README.md)
 - 工位对齐清单入口：[../human/operations/hardware_alignment_checklist.md](../human/operations/hardware_alignment_checklist.md)
+- 仿真运行手册入口：[../human/operations/simulation_runbook.md](../human/operations/simulation_runbook.md)
 - P3 恢复 SOP 入口：[../human/phases/p3/recovery_sop.md](../human/phases/p3/recovery_sop.md)
