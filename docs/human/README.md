@@ -8,8 +8,9 @@
 
 1. [overview/project_status.md](overview/project_status.md)
 2. [overview/next_actions.md](overview/next_actions.md)
-3. 当前阶段对应文档
-4. 需要操作时再看 `operations/`
+3. [overview/roadmap.md](overview/roadmap.md)
+4. 当前阶段对应文档
+5. 需要操作时再看 `operations/`
 
 ## 目录说明
 
@@ -31,6 +32,7 @@
 
 - 当前状态：[overview/project_status.md](overview/project_status.md)
 - 下一步任务：[overview/next_actions.md](overview/next_actions.md)
+- 总体路线：[overview/roadmap.md](overview/roadmap.md)
 - P2 验收：[phases/p2/acceptance_report.md](phases/p2/acceptance_report.md)
 - P3-A 恢复 SOP：[phases/p3/recovery_sop.md](phases/p3/recovery_sop.md)
 - P3-B 验证计划：[phases/p3/moveit_validation_plan.md](phases/p3/moveit_validation_plan.md)

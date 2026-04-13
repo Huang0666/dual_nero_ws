@@ -9,6 +9,7 @@
 - [p1/README.md](p1/README.md)
 - [p2/README.md](p2/README.md)
 - [p3/README.md](p3/README.md)
+- [p4/README.md](p4/README.md)
 
 ## 规则
 

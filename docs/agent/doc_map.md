@@ -13,6 +13,7 @@
 - 对应 `human/phases/` 阶段文档
 - [../human/overview/project_status.md](../human/overview/project_status.md)
 - 如影响下一步，还要更新 [../human/overview/next_actions.md](../human/overview/next_actions.md)
+- 如影响整体阶段路线，还要更新 [../human/overview/roadmap.md](../human/overview/roadmap.md)
 - [current_context.md](current_context.md)
 
 ### 2. 改启动、执行、恢复命令
@@ -64,6 +65,8 @@
 
 - 状态：[../human/overview/project_status.md](../human/overview/project_status.md)
 - 任务：[../human/overview/next_actions.md](../human/overview/next_actions.md)
+- 路线：[../human/overview/roadmap.md](../human/overview/roadmap.md)
+- P4：[../human/phases/p4/README.md](../human/phases/p4/README.md)
 - P2：[../human/phases/p2/acceptance_report.md](../human/phases/p2/acceptance_report.md)
 - P3-A：[../human/phases/p3/recovery_sop.md](../human/phases/p3/recovery_sop.md)
 - P3-B：[../human/phases/p3/moveit_validation_plan.md](../human/phases/p3/moveit_validation_plan.md)

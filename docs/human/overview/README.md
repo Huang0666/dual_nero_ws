@@ -8,4 +8,5 @@
 
 - [project_status.md](project_status.md)：当前阶段、优先级、退出标准
 - [next_actions.md](next_actions.md)：当前阶段下一步任务
+- [roadmap.md](roadmap.md)：从当前能力走向双臂协调、避障、视觉、抓取的总体路线
 - [project_baseline.md](project_baseline.md)：整体架构基线和命名合同

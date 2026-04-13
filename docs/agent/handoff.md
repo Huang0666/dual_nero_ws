@@ -18,6 +18,8 @@
 
 - 项目状态：[../human/overview/project_status.md](../human/overview/project_status.md)
 - 下一步任务：[../human/overview/next_actions.md](../human/overview/next_actions.md)
+- 总体路线：[../human/overview/roadmap.md](../human/overview/roadmap.md)
+- P4 阶段定义：[../human/phases/p4/README.md](../human/phases/p4/README.md)
 - P3 恢复 SOP：[../human/phases/p3/recovery_sop.md](../human/phases/p3/recovery_sop.md)
 - P3 验证报告：[../human/phases/p3/moveit_validation_report.md](../human/phases/p3/moveit_validation_report.md)
 - 运维问题索引：[../human/operations/issue_index.md](../human/operations/issue_index.md)

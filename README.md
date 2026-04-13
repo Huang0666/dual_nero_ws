@@ -13,13 +13,26 @@
 - P1：已完成
 - P2：已完成并通过现场验收
 - 当前执行架构：bridge（未切 native `ros2_control`）
-- 当前阶段：P3 进行中（A/B 执行，C 暂缓）
+- 当前阶段：P4 目标定义
 
-P3 当前拆分：
+长期目标：
 
-- P3-A：故障恢复 SOP 标准化（先做）
-- P3-B：MoveIt 执行链系统化验证（再做）
-- P3-C：USB-CAN 固定命名（暂缓）
+- 双臂协调运动
+- 避障
+- 视觉接入
+- 简单抓取任务
+
+当前阶段进展：
+
+- P1：已完成
+- P2：已完成并通过现场验收
+- P3-A：已完成
+- P3-B：主体已完成
+- P3-C：暂缓
+
+当前路线入口：
+
+- [docs/human/overview/roadmap.md](docs/human/overview/roadmap.md)
 
 文档入口：
 

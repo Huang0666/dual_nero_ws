@@ -41,6 +41,12 @@
 2. 把 P4-P6 路线与最终目标对齐
 3. 不推进 P3-C 的固定命名实现
 
+## 当前对 P4 的约束
+
+- P4 从双臂任务开始，不退回单臂优先
+- P4 先做固定场景、固定工位、无视觉、低风险双臂任务
+- P5 再正式引入双臂协调约束和避障
+
 ## 当前不做
 
 - 不做 P3-C 的固定命名实现
@@ -52,4 +58,6 @@
 
 - Human 状态入口：[../human/overview/project_status.md](../human/overview/project_status.md)
 - Human 下一步入口：[../human/overview/next_actions.md](../human/overview/next_actions.md)
+- Human 总路线入口：[../human/overview/roadmap.md](../human/overview/roadmap.md)
+- P4 阶段定义入口：[../human/phases/p4/README.md](../human/phases/p4/README.md)
 - P3 验证报告：[../human/phases/p3/moveit_validation_report.md](../human/phases/p3/moveit_validation_report.md)

@@ -15,6 +15,7 @@
 
 - [../phases/p2/acceptance_report.md](../phases/p2/acceptance_report.md)
 - [../phases/p3/moveit_validation_report.md](../phases/p3/moveit_validation_report.md)
+- [roadmap.md](roadmap.md)
 
 ## 长期目标
 
@@ -84,6 +85,11 @@
 1. 定义 P4 的任务目标、范围和验收标准
 2. 将 P4 与最终“协调运动/避障/视觉/抓取”目标建立清晰映射
 3. 保持 P3-C 作为待办入口，不在当前周期实施
+
+## 总体路线入口
+
+- [roadmap.md](roadmap.md)
+- P4 阶段定义：[../phases/p4/README.md](../phases/p4/README.md)
 
 ## 当前风险
 
