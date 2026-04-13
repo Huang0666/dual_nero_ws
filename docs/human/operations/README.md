@@ -7,6 +7,7 @@
 ## 当前文档
 
 - [migration_runbook.md](migration_runbook.md)：迁移、环境准备、标准启动
+- [hardware_alignment_checklist.md](hardware_alignment_checklist.md)：硬件工位与模型对齐清单
 - [issue_index.md](issue_index.md)：跨阶段运维问题索引
 
 ## 规则

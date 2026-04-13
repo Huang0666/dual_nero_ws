@@ -16,6 +16,10 @@
 - 如影响整体阶段路线，还要更新 [../human/overview/roadmap.md](../human/overview/roadmap.md)
 - [current_context.md](current_context.md)
 
+如果需要判断阶段是否完成，还应同步更新：
+
+- [../human/phases/p4/completion_checklist.md](../human/phases/p4/completion_checklist.md)
+
 ### 2. 改启动、执行、恢复命令
 
 必须更新：

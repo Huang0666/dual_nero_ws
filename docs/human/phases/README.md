@@ -11,6 +11,11 @@
 - [p3/README.md](p3/README.md)
 - [p4/README.md](p4/README.md)
 
+## 当前推荐阶段入口
+
+- P4 阶段定义：[p4/README.md](p4/README.md)
+- P4 完成清单：[p4/completion_checklist.md](p4/completion_checklist.md)
+
 ## 规则
 
 - 阶段内发现的问题，先写入对应阶段文档

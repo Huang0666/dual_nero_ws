@@ -12,16 +12,19 @@
 - 视觉接入
 - 简单抓取任务
 
-## 优先级 A：完成 P4 双臂任务闭环验收
+## 优先级 A：先做 P4 点位与空间建模
 
-- 在动作模式下执行 `dual_prep_sync`，完成多次重复验证
-- 固化任务安全位/预备位/返回位配置
-- 失败时按 P3-A SOP 处理，不做临时指令拼凑
+- 固定一组可重复回位的初始/安全位
+- 明确左右臂在当前工位下的安全活动空间
+- 再在该空间内定义预备位和任务位
 - 当前阶段定义入口：[../phases/p4/README.md](../phases/p4/README.md)
+- 对齐清单入口：[../operations/hardware_alignment_checklist.md](../operations/hardware_alignment_checklist.md)
 
-## 优先级 B：保持 P4-P6 路线冻结
+## 优先级 B：暂停盲试，保留正式入口
 
-- 路线入口：[roadmap.md](roadmap.md)
+- 暂停继续盲目增大动作幅度试错
+- 保留 `run_dual_arm_task` 作为正式任务入口
+- 等点位建模完成后，再恢复真机验收
 
 ## 优先级 C：保留待办但当前不做
 
@@ -33,10 +36,10 @@
 
 - 切换到 native `ros2_control` plugin
 - 大规模架构重写
-- 在未定义任务目标前继续扩散验证范围
+- 在空间关系未定义清楚前继续扩散真机验证范围
 
 ## 当前建议入口
 
 - 项目状态入口：[project_status.md](project_status.md)
-- P3 验证报告入口：[../phases/p3/moveit_validation_report.md](../phases/p3/moveit_validation_report.md)
+- P4 阶段定义入口：[../phases/p4/README.md](../phases/p4/README.md)
 - P3 恢复 SOP 入口：[../phases/p3/recovery_sop.md](../phases/p3/recovery_sop.md)
