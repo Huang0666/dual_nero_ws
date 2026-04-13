@@ -105,7 +105,7 @@ class SingleArmFollowJointTrajectoryServer:
                 ),
             )
         except (BridgeMotionRejectedError, BridgeArmUnavailableError) as exc:
-            self._stop_side()
+            self._try_stop_side()
             goal_handle.abort()
             log_abort(self._node.get_logger(), self._controller_name, str(exc))
             return self._result(
@@ -113,7 +113,7 @@ class SingleArmFollowJointTrajectoryServer:
                 error_string=str(exc),
             )
         except Exception as exc:
-            self._stop_side()
+            self._try_stop_side()
             goal_handle.abort()
             message = f"{self._controller_name} execution failed: {exc}"
             log_abort(self._node.get_logger(), self._controller_name, message)
@@ -133,6 +133,14 @@ class SingleArmFollowJointTrajectoryServer:
             self._runtime.stop_left()
             return
         self._runtime.stop_right()
+
+    def _try_stop_side(self) -> None:
+        try:
+            self._stop_side()
+        except Exception as exc:
+            self._node.get_logger().warning(
+                f"[STATE][{self._controller_name}] stop request failed during cleanup: {exc}"
+            )
 
     def _build_feedback(
         self,

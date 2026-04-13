@@ -110,8 +110,9 @@ class TaskExecutionSummary:
 class TaskFinalSummary:
     task_name: str
     overall_status: str
-    prep_stage: str
-    return_stage: str
+    target_mode: str
+    primary_stage: str
+    secondary_stage: str
 
     def to_pretty_json(self) -> str:
         return json.dumps(asdict(self), ensure_ascii=False, indent=2, sort_keys=True)
@@ -123,6 +124,8 @@ class DualArmTaskClient(Node):
         *,
         task: DualArmTaskDefinition,
         timeout_sec: float,
+        result_timeout_sec: float,
+        result_timeout_margin_sec: float,
         plan_service_name: str,
         planning_time_sec: float,
         planning_attempts: int,
@@ -135,6 +138,8 @@ class DualArmTaskClient(Node):
         super().__init__(f"{task.task_name}_task_client")
         self.task = task
         self.timeout_sec = float(timeout_sec)
+        self.result_timeout_sec = float(result_timeout_sec)
+        self.result_timeout_margin_sec = float(result_timeout_margin_sec)
         self.plan_service_name = plan_service_name
         self.planning_time_sec = float(planning_time_sec)
         self.planning_attempts = int(planning_attempts)
@@ -281,8 +286,17 @@ class DualArmTaskClient(Node):
 
         left_result_future = left_handle.get_result_async()
         right_result_future = right_handle.get_result_async()
-        left_result_handle = self._wait_for_future(left_result_future, f"{stage} left-arm result")
-        right_result_handle = self._wait_for_future(right_result_future, f"{stage} right-arm result")
+        result_timeout = self._result_wait_timeout_sec(trajectory)
+        left_result_handle = self._wait_for_future(
+            left_result_future,
+            f"{stage} left-arm result",
+            timeout_sec=result_timeout,
+        )
+        right_result_handle = self._wait_for_future(
+            right_result_future,
+            f"{stage} right-arm result",
+            timeout_sec=result_timeout,
+        )
         left_result = left_result_handle.result
         right_result = right_result_handle.result
         left_code = int(left_result.error_code)
@@ -416,12 +430,22 @@ class DualArmTaskClient(Node):
         point.time_from_start = final_point.time_from_start
         return point
 
-    def _wait_for_future(self, future, label: str):
-        rclpy.spin_until_future_complete(self, future, timeout_sec=self.timeout_sec)
+    def _wait_for_future(self, future, label: str, *, timeout_sec: float | None = None):
+        wait_timeout_sec = self.timeout_sec if timeout_sec is None else float(timeout_sec)
+        rclpy.spin_until_future_complete(self, future, timeout_sec=wait_timeout_sec)
         result = future.result()
         if result is None:
-            raise RuntimeError(f"{label} timed out.")
+            raise RuntimeError(f"{label} timed out after {wait_timeout_sec:.1f}s.")
         return result
+
+    def _result_wait_timeout_sec(self, trajectory: JointTrajectory) -> float:
+        if not trajectory.points:
+            return self.result_timeout_sec
+        final_point = trajectory.points[-1]
+        planned_duration_sec = float(final_point.time_from_start.sec) + (
+            float(final_point.time_from_start.nanosec) / 1e9
+        )
+        return max(self.result_timeout_sec, planned_duration_sec + self.result_timeout_margin_sec)
 
     def _cancel_if_possible(self, goal_handle) -> None:
         if goal_handle is None or not getattr(goal_handle, "accepted", False):
@@ -448,10 +472,31 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to the P4 task YAML.",
     )
     parser.add_argument(
+        "--target",
+        choices=["full", "prep", "safe", "return"],
+        default="full",
+        help=(
+            "Execution target. 'full' means move to prep_positions and then optionally "
+            "return_positions. 'safe' moves directly to safe_positions."
+        ),
+    )
+    parser.add_argument(
         "--timeout",
         type=float,
         default=5.0,
-        help="Timeout in seconds for /joint_states, service readiness, action readiness, and results.",
+        help="Timeout in seconds for /joint_states, service readiness, and action readiness.",
+    )
+    parser.add_argument(
+        "--result-timeout",
+        type=float,
+        default=30.0,
+        help="Minimum timeout in seconds when waiting for each arm action result.",
+    )
+    parser.add_argument(
+        "--result-timeout-margin",
+        type=float,
+        default=15.0,
+        help="Extra seconds added on top of the planned trajectory duration when waiting for action results.",
     )
     parser.add_argument(
         "--planning-time",
@@ -595,6 +640,8 @@ def main(argv: list[str] | None = None) -> int:
     node = DualArmTaskClient(
         task=task_definition,
         timeout_sec=args.timeout,
+        result_timeout_sec=args.result_timeout,
+        result_timeout_margin_sec=args.result_timeout_margin,
         plan_service_name=args.plan_service,
         planning_time_sec=args.planning_time,
         planning_attempts=args.planning_attempts,
@@ -609,22 +656,29 @@ def main(argv: list[str] | None = None) -> int:
         preview = node.build_preview()
         print(preview.to_pretty_json())
 
-        prep_response = node.plan_to_positions(
-            stage="prep",
-            target_positions=task_definition.prep_positions.as_dual_positions(),
+        primary_stage_name, primary_target_positions = _resolve_primary_stage(
+            task_definition=task_definition,
+            target=args.target,
         )
-        prep_plan_summary = node.summarize_plan(stage="prep", response=prep_response)
-        print(prep_plan_summary.to_pretty_json())
-        if prep_plan_summary.error_code != MoveItErrorCodes.SUCCESS:
+        primary_response = node.plan_to_positions(
+            stage=primary_stage_name,
+            target_positions=primary_target_positions,
+        )
+        primary_plan_summary = node.summarize_plan(stage=primary_stage_name, response=primary_response)
+        print(primary_plan_summary.to_pretty_json())
+        if primary_plan_summary.error_code != MoveItErrorCodes.SUCCESS:
             return 1
 
-        prep_execution_summary = node.execute_dual_arm_stage(stage="prep", response=prep_response)
-        print(prep_execution_summary.to_pretty_json())
-        if prep_execution_summary.overall_status != "success":
+        primary_execution_summary = node.execute_dual_arm_stage(
+            stage=primary_stage_name,
+            response=primary_response,
+        )
+        print(primary_execution_summary.to_pretty_json())
+        if primary_execution_summary.overall_status != "success":
             return 1
 
-        return_stage_status = "skipped"
-        if task_definition.allow_return_to_safe:
+        secondary_stage_status = "skipped"
+        if args.target == "full" and task_definition.allow_return_to_safe:
             return_response = node.plan_to_positions(
                 stage="return",
                 target_positions=task_definition.return_positions.as_dual_positions(),
@@ -638,14 +692,15 @@ def main(argv: list[str] | None = None) -> int:
             print(return_execution_summary.to_pretty_json())
             if return_execution_summary.overall_status != "success":
                 return 1
-            return_stage_status = "success"
+            secondary_stage_status = "success"
 
         print(
             TaskFinalSummary(
                 task_name=task_definition.task_name,
                 overall_status="success",
-                prep_stage="success",
-                return_stage=return_stage_status,
+                target_mode=args.target,
+                primary_stage="success",
+                secondary_stage=secondary_stage_status,
             ).to_pretty_json()
         )
         return 0
@@ -655,6 +710,20 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         node.destroy_node()
         rclpy.shutdown()
+
+
+def _resolve_primary_stage(
+    *,
+    task_definition: DualArmTaskDefinition,
+    target: str,
+) -> tuple[str, list[float]]:
+    if target == "prep":
+        return "prep", task_definition.prep_positions.as_dual_positions()
+    if target == "safe":
+        return "safe", task_definition.safe_positions.as_dual_positions()
+    if target == "return":
+        return "return", task_definition.return_positions.as_dual_positions()
+    return "prep", task_definition.prep_positions.as_dual_positions()
 
 
 if __name__ == "__main__":

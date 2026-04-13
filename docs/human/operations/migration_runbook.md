@@ -121,6 +121,12 @@ ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync
 - 需要在动作模式下执行
 - 任务配置文件在 `src/dual_nero_bridge/config/p4_tasks.yaml`
 
+如果要直接回固定初始/安全位：
+
+```bash
+ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync --target safe
+```
+
 ## 成功标准
 
 - 左右臂单测均 `rc=0`

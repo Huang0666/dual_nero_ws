@@ -92,6 +92,12 @@ P4 的下一步不是继续补底层验证，而是把第一个双臂真实任�
 ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync
 ```
 
+如果要直接回到固定初始/安全位，可执行：
+
+```bash
+ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync --target safe
+```
+
 任务配置文件：
 
 - `src/dual_nero_bridge/config/p4_tasks.yaml`
