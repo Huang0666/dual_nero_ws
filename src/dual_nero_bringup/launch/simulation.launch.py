@@ -3,7 +3,7 @@ from pathlib import Path
 import yaml
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, LogInfo, OpaqueFunction, RegisterEventHandler, SetEnvironmentVariable, TimerAction
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, EnvironmentVariable, LaunchConfiguration, PathJoinSubstitution
@@ -23,6 +23,7 @@ def _startup_logs(context, *_args, **_kwargs):
     world_file = LaunchConfiguration("world_file").perform(context)
     with_moveit = LaunchConfiguration("with_moveit").perform(context)
     with_rviz = LaunchConfiguration("with_rviz").perform(context)
+    with_gz_gui = LaunchConfiguration("with_gz_gui").perform(context)
     use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
     gz_resource_path = EnvironmentVariable("GZ_SIM_RESOURCE_PATH", default_value="").perform(context)
     return [
@@ -30,6 +31,7 @@ def _startup_logs(context, *_args, **_kwargs):
         LogInfo(msg=f"[sim] world_file -> {world_file}"),
         LogInfo(msg=f"[sim] with_moveit -> {with_moveit}"),
         LogInfo(msg=f"[sim] with_rviz -> {with_rviz}"),
+        LogInfo(msg=f"[sim] with_gz_gui -> {with_gz_gui}"),
         LogInfo(msg=f"[sim] use_sim_time -> {use_sim_time}"),
         LogInfo(msg=f"[sim] GZ_SIM_RESOURCE_PATH -> {gz_resource_path}"),
         LogInfo(
@@ -85,13 +87,27 @@ def generate_launch_description():
         ],
     )
 
-    gz_sim = ExecuteProcess(
+    gz_sim_server = ExecuteProcess(
         cmd=[
             "ign",
             "gazebo",
             "-r",
             LaunchConfiguration("world_file"),
+            "-s",
         ],
+        condition=UnlessCondition(LaunchConfiguration("with_gz_gui")),
+        output="screen",
+    )
+
+    gz_sim_gui = ExecuteProcess(
+        cmd=[
+            "ign",
+            "gazebo",
+            "-r",
+            LaunchConfiguration("world_file"),
+            "-g",
+        ],
+        condition=IfCondition(LaunchConfiguration("with_gz_gui")),
         output="screen",
     )
 
@@ -190,6 +206,11 @@ def generate_launch_description():
                 default_value=str(defaults.get("with_rviz", True)).lower(),
                 description="Whether to start MoveIt RViz.",
             ),
+            DeclareLaunchArgument(
+                "with_gz_gui",
+                default_value=str(defaults.get("with_gz_gui", False)).lower(),
+                description="Whether to start Gazebo GUI. Default false to avoid Ogre2 GUI crashes on current assets.",
+            ),
             SetEnvironmentVariable(
                 name="GZ_SIM_RESOURCE_PATH",
                 value=[
@@ -201,7 +222,8 @@ def generate_launch_description():
                 ],
             ),
             OpaqueFunction(function=_startup_logs),
-            gz_sim,
+            gz_sim_server,
+            gz_sim_gui,
             clock_bridge,
             robot_state_publisher,
             spawn_robot,

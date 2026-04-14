@@ -2,6 +2,7 @@ simulation:
   backend: sim_gz
   with_moveit: true
   with_rviz: true
+  with_gz_gui: false
   use_sim_time: true
   world_file: ""
   robot_name: dual_nero
