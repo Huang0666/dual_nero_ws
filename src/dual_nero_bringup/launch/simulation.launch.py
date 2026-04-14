@@ -2,11 +2,11 @@ from pathlib import Path
 
 import yaml
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, OpaqueFunction, RegisterEventHandler, TimerAction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, OpaqueFunction, RegisterEventHandler, SetEnvironmentVariable, TimerAction
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import Command, EnvironmentVariable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from launch.substitutions import FindExecutable
@@ -24,12 +24,14 @@ def _startup_logs(context, *_args, **_kwargs):
     with_moveit = LaunchConfiguration("with_moveit").perform(context)
     with_rviz = LaunchConfiguration("with_rviz").perform(context)
     use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
+    gz_resource_path = EnvironmentVariable("GZ_SIM_RESOURCE_PATH", default_value="").perform(context)
     return [
         LogInfo(msg=f"[sim] backend -> {backend}"),
         LogInfo(msg=f"[sim] world_file -> {world_file}"),
         LogInfo(msg=f"[sim] with_moveit -> {with_moveit}"),
         LogInfo(msg=f"[sim] with_rviz -> {with_rviz}"),
         LogInfo(msg=f"[sim] use_sim_time -> {use_sim_time}"),
+        LogInfo(msg=f"[sim] GZ_SIM_RESOURCE_PATH -> {gz_resource_path}"),
         LogInfo(
             msg="[sim] contract -> task entry, MoveIt groups, controller names, "
             "and FollowJointTrajectory remain aligned with P1-P4."
@@ -39,6 +41,7 @@ def _startup_logs(context, *_args, **_kwargs):
 
 def generate_launch_description():
     defaults = _load_defaults()
+    description_pkg = FindPackageShare("dual_nero_description")
     moveit_pkg = FindPackageShare("dual_nero_moveit_config")
     bringup_pkg = FindPackageShare("dual_nero_bringup")
 
@@ -183,6 +186,16 @@ def generate_launch_description():
                 "with_rviz",
                 default_value=str(defaults.get("with_rviz", True)).lower(),
                 description="Whether to start MoveIt RViz.",
+            ),
+            SetEnvironmentVariable(
+                name="GZ_SIM_RESOURCE_PATH",
+                value=[
+                    description_pkg,
+                    ":",
+                    bringup_pkg,
+                    ":",
+                    EnvironmentVariable("GZ_SIM_RESOURCE_PATH", default_value=""),
+                ],
             ),
             OpaqueFunction(function=_startup_logs),
             gz_sim,
