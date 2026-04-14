@@ -4,7 +4,7 @@
         name="dual_nero_description_ros2_control"
         params="name initial_positions_file hardware_plugin:='mock_components/GenericSystem' use_gz_sim:='false' controllers_file:=''"
     >
-        <xacro:property name="initial_positions" value="${load_yaml(initial_positions_file)['initial_positions']}"/>
+        <xacro:property name="initial_positions" value="${xacro.load_yaml(initial_positions_file)['initial_positions']}"/>
 
         <ros2_control name="${name}" type="system">
             <hardware>
