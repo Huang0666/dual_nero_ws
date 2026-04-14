@@ -8,15 +8,16 @@
     xyz/rpy:   arm mount pose relative to parent
   -->
   <xacro:macro name="nero_single_arm" params="prefix parent xyz:='0 0 0' rpy:='0 0 0' use_sim_visuals:='false'">
-    <xacro:property name="base_visual_mesh" value="${'package://dual_nero_description/meshes/base_link.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/base_link.dae'}"/>
-    <xacro:property name="link1_visual_mesh" value="${'package://dual_nero_description/meshes/Link1.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/link1.dae'}"/>
-    <xacro:property name="link2_visual_mesh" value="${'package://dual_nero_description/meshes/Link2.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/link2.dae'}"/>
-    <xacro:property name="link3_visual_mesh" value="${'package://dual_nero_description/meshes/Link3.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/link3.dae'}"/>
-    <xacro:property name="link4_visual_mesh" value="${'package://dual_nero_description/meshes/Link4.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/link4.dae'}"/>
-    <xacro:property name="link5_visual_mesh" value="${'package://dual_nero_description/meshes/Link5.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/link5.dae'}"/>
-    <xacro:property name="link6_visual_mesh" value="${'package://dual_nero_description/meshes/Link6.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/link6.dae'}"/>
-    <xacro:property name="link7_visual_mesh" value="${'package://dual_nero_description/meshes/Link7.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/link7.dae'}"/>
-    <xacro:property name="ee_visual_mesh" value="${'package://dual_nero_description/meshes/stand_v2.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/stand_v1.dae'}"/>
+    <xacro:property name="sim_visuals_enabled" value="${str(use_sim_visuals).lower() == 'true'}"/>
+    <xacro:property name="base_visual_mesh" value="${'package://dual_nero_description/meshes/base_link.STL' if sim_visuals_enabled else 'package://dual_nero_description/meshes/dae/base_link.dae'}"/>
+    <xacro:property name="link1_visual_mesh" value="${'package://dual_nero_description/meshes/Link1.STL' if sim_visuals_enabled else 'package://dual_nero_description/meshes/dae/link1.dae'}"/>
+    <xacro:property name="link2_visual_mesh" value="${'package://dual_nero_description/meshes/Link2.STL' if sim_visuals_enabled else 'package://dual_nero_description/meshes/dae/link2.dae'}"/>
+    <xacro:property name="link3_visual_mesh" value="${'package://dual_nero_description/meshes/Link3.STL' if sim_visuals_enabled else 'package://dual_nero_description/meshes/dae/link3.dae'}"/>
+    <xacro:property name="link4_visual_mesh" value="${'package://dual_nero_description/meshes/Link4.STL' if sim_visuals_enabled else 'package://dual_nero_description/meshes/dae/link4.dae'}"/>
+    <xacro:property name="link5_visual_mesh" value="${'package://dual_nero_description/meshes/Link5.STL' if sim_visuals_enabled else 'package://dual_nero_description/meshes/dae/link5.dae'}"/>
+    <xacro:property name="link6_visual_mesh" value="${'package://dual_nero_description/meshes/Link6.STL' if sim_visuals_enabled else 'package://dual_nero_description/meshes/dae/link6.dae'}"/>
+    <xacro:property name="link7_visual_mesh" value="${'package://dual_nero_description/meshes/Link7.STL' if sim_visuals_enabled else 'package://dual_nero_description/meshes/dae/link7.dae'}"/>
+    <xacro:property name="ee_visual_mesh" value="${'package://dual_nero_description/meshes/stand_v2.STL' if sim_visuals_enabled else 'package://dual_nero_description/meshes/stand_v1.dae'}"/>
     <link name="${prefix}base_link">
       <inertial>
         <origin xyz="-0.00963614954335565 0.00016786624100977 0.044860101664403" rpy="0 0 0"/>
@@ -174,7 +175,7 @@
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="-1.57 -1.57 -1.57"/>
-        <geometry><mesh filename="${'package://dual_nero_description/meshes/stand_v2.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/stand_v1.dae'}"/></geometry>
+        <geometry><mesh filename="${'package://dual_nero_description/meshes/stand_v2.STL' if sim_visuals_enabled else 'package://dual_nero_description/meshes/stand_v1.dae'}"/></geometry>
       </collision>
     </link>
     <joint name="${prefix}end_effector_joint" type="fixed">
