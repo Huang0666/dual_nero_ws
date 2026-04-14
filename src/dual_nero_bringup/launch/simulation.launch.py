@@ -2,7 +2,7 @@ from pathlib import Path
 
 import yaml
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, OpaqueFunction, RegisterEventHandler, SetEnvironmentVariable, TimerAction
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, LogInfo, OpaqueFunction, RegisterEventHandler, SetEnvironmentVariable, TimerAction
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -85,13 +85,14 @@ def generate_launch_description():
         ],
     )
 
-    gz_sim = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution([FindPackageShare("ros_gz_sim"), "launch", "gz_sim.launch.py"])
-        ),
-        launch_arguments={
-            "gz_args": [LaunchConfiguration("world_file"), " -r"],
-        }.items(),
+    gz_sim = ExecuteProcess(
+        cmd=[
+            "ign",
+            "gazebo",
+            "-r",
+            LaunchConfiguration("world_file"),
+        ],
+        output="screen",
     )
 
     spawn_robot = Node(
