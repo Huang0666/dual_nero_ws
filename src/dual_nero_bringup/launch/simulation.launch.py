@@ -94,8 +94,8 @@ def generate_launch_description():
         executable="create",
         output="screen",
         arguments=[
-            "-string",
-            robot_description,
+            "-topic",
+            "robot_description",
             "-name",
             LaunchConfiguration("robot_name"),
             "-allow_renaming",
