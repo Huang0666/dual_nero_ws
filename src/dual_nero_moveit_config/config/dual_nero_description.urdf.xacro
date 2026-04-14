@@ -7,6 +7,7 @@
     <xacro:arg name="use_sim_visuals" default="$(arg use_gz_sim)" />
 
     <!-- Import dual_nero_description urdf file -->
+    <xacro:property name="use_sim_visuals" value="$(arg use_sim_visuals)" />
     <xacro:include filename="$(find dual_nero_description)/urdf/dual_nero_description.xacro" />
 
     <!-- Import control_xacro -->
