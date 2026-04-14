@@ -7,7 +7,16 @@
     parent:    the link this arm is fixed to
     xyz/rpy:   arm mount pose relative to parent
   -->
-  <xacro:macro name="nero_single_arm" params="prefix parent xyz:='0 0 0' rpy:='0 0 0'">
+  <xacro:macro name="nero_single_arm" params="prefix parent xyz:='0 0 0' rpy:='0 0 0' use_sim_visuals:='false'">
+    <xacro:property name="base_visual_mesh" value="${'package://dual_nero_description/meshes/base_link.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/base_link.dae'}"/>
+    <xacro:property name="link1_visual_mesh" value="${'package://dual_nero_description/meshes/Link1.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/link1.dae'}"/>
+    <xacro:property name="link2_visual_mesh" value="${'package://dual_nero_description/meshes/Link2.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/link2.dae'}"/>
+    <xacro:property name="link3_visual_mesh" value="${'package://dual_nero_description/meshes/Link3.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/link3.dae'}"/>
+    <xacro:property name="link4_visual_mesh" value="${'package://dual_nero_description/meshes/Link4.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/link4.dae'}"/>
+    <xacro:property name="link5_visual_mesh" value="${'package://dual_nero_description/meshes/Link5.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/link5.dae'}"/>
+    <xacro:property name="link6_visual_mesh" value="${'package://dual_nero_description/meshes/Link6.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/link6.dae'}"/>
+    <xacro:property name="link7_visual_mesh" value="${'package://dual_nero_description/meshes/Link7.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/dae/link7.dae'}"/>
+    <xacro:property name="ee_visual_mesh" value="${'package://dual_nero_description/meshes/stand_v2.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/stand_v1.dae'}"/>
     <link name="${prefix}base_link">
       <inertial>
         <origin xyz="-0.00963614954335565 0.00016786624100977 0.044860101664403" rpy="0 0 0"/>
@@ -17,7 +26,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://dual_nero_description/meshes/dae/base_link.dae"/>
+          <mesh filename="${base_visual_mesh}"/>
         </geometry>
       </visual>
       <collision>
@@ -40,7 +49,7 @@
         <mass value="0.77"/>
         <inertia ixx="0.0006669" ixy="0.0" ixz="0.0" iyy="0.00054501" iyz="0.0" izz="0.00051509"/>
       </inertial>
-      <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="package://dual_nero_description/meshes/dae/link1.dae"/></geometry></visual>
+      <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="${link1_visual_mesh}"/></geometry></visual>
       <collision><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="package://dual_nero_description/meshes/Link1.STL"/></geometry></collision>
     </link>
     <joint name="${prefix}joint1" type="revolute">
@@ -57,7 +66,7 @@
         <mass value="0.49"/>
         <inertia ixx="0.00053808" ixy="0.0" ixz="0.0" iyy="0.00029435" iyz="0.0" izz="0.00040266"/>
       </inertial>
-      <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="package://dual_nero_description/meshes/dae/link2.dae"/></geometry></visual>
+      <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="${link2_visual_mesh}"/></geometry></visual>
       <collision><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="package://dual_nero_description/meshes/Link2.STL"/></geometry></collision>
     </link>
     <joint name="${prefix}joint2" type="revolute">
@@ -74,7 +83,7 @@
         <mass value="0.67"/>
         <inertia ixx="0.00342528" ixy="0.0" ixz="0.0" iyy="0.0033924" iyz="0.0" izz="0.00026169"/>
       </inertial>
-      <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="package://dual_nero_description/meshes/dae/link3.dae"/></geometry></visual>
+      <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="${link3_visual_mesh}"/></geometry></visual>
       <collision><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="package://dual_nero_description/meshes/Link3.STL"/></geometry></collision>
     </link>
     <joint name="${prefix}joint3" type="revolute">
@@ -91,7 +100,7 @@
         <mass value="0.41"/>
         <inertia ixx="0.00031331" ixy="0.0" ixz="0.0" iyy="0.00013204" iyz="0.0" izz="0.0002393"/>
       </inertial>
-      <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="package://dual_nero_description/meshes/dae/link4.dae"/></geometry></visual>
+      <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="${link4_visual_mesh}"/></geometry></visual>
       <collision><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="package://dual_nero_description/meshes/Link4.STL"/></geometry></collision>
     </link>
     <joint name="${prefix}joint4" type="revolute">
@@ -108,7 +117,7 @@
         <mass value="0.56"/>
         <inertia ixx="0.0008249" ixy="0.0" ixz="0.0" iyy="0.00078548" iyz="0.0" izz="0.00021015"/>
       </inertial>
-      <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="package://dual_nero_description/meshes/dae/link5.dae"/></geometry></visual>
+      <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="${link5_visual_mesh}"/></geometry></visual>
       <collision><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="package://dual_nero_description/meshes/Link5.STL"/></geometry></collision>
     </link>
     <joint name="${prefix}joint5" type="revolute">
@@ -125,7 +134,7 @@
         <mass value="0.31"/>
         <inertia ixx="0.00008181" ixy="0.0" ixz="0.0" iyy="0.00007176" iyz="0.0" izz="0.00007906"/>
       </inertial>
-      <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="package://dual_nero_description/meshes/dae/link6.dae"/></geometry></visual>
+      <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="${link6_visual_mesh}"/></geometry></visual>
       <collision><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="package://dual_nero_description/meshes/Link6.STL"/></geometry></collision>
     </link>
     <joint name="${prefix}joint6" type="revolute">
@@ -142,7 +151,7 @@
         <mass value="0.000001"/>
         <inertia ixx="1.1000000000000001e-07" ixy="0" ixz="0" iyy="1.1000000000000001e-07" iyz="0" izz="1.9999999999999999e-07"/>
       </inertial>
-      <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="package://dual_nero_description/meshes/dae/link7.dae"/></geometry></visual>
+      <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="${link7_visual_mesh}"/></geometry></visual>
       <collision><origin xyz="0 0 0" rpy="0 0 0"/><geometry><mesh filename="package://dual_nero_description/meshes/Link7.STL"/></geometry></collision>
     </link>
     <joint name="${prefix}joint7" type="revolute">
@@ -161,11 +170,11 @@
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="-1.57 -1.57 -1.57"/>
-        <geometry><mesh filename="package://dual_nero_description/meshes/stand_v1.dae"/></geometry>
+        <geometry><mesh filename="${ee_visual_mesh}"/></geometry>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="-1.57 -1.57 -1.57"/>
-        <geometry><mesh filename="package://dual_nero_description/meshes/stand_v1.dae"/></geometry>
+        <geometry><mesh filename="${'package://dual_nero_description/meshes/stand_v2.STL' if use_sim_visuals == 'true' else 'package://dual_nero_description/meshes/stand_v1.dae'}"/></geometry>
       </collision>
     </link>
     <joint name="${prefix}end_effector_joint" type="fixed">

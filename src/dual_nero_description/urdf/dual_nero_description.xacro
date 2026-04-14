@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <robot name="dual_nero_description" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="use_sim_visuals" default="false"/>
 
   <!-- 引入单臂宏 -->
   <xacro:include filename="$(find dual_nero_description)/urdf/nero_single_arm_macro.xacro"/>
@@ -94,13 +95,15 @@
       prefix="right_"
       parent="dual_crossbar"
       xyz="-0.145 0 0"
-      rpy="0 -1.5708 0"/>
+      rpy="0 -1.5708 0"
+      use_sim_visuals="$(arg use_sim_visuals)"/>
 
   <!-- 左臂 -->
   <xacro:nero_single_arm
       prefix="left_"
       parent="dual_crossbar"
       xyz="0.145 0 0"
-      rpy="0 -1.5708 3.14159"/>
+      rpy="0 -1.5708 3.14159"
+      use_sim_visuals="$(arg use_sim_visuals)"/>
 
 </robot>
