@@ -44,6 +44,8 @@ def generate_launch_description():
     description_pkg = FindPackageShare("dual_nero_description")
     moveit_pkg = FindPackageShare("dual_nero_moveit_config")
     bringup_pkg = FindPackageShare("dual_nero_bringup")
+    description_model_root = PathJoinSubstitution([description_pkg, ".."])
+    bringup_model_root = PathJoinSubstitution([bringup_pkg, ".."])
 
     default_world = PathJoinSubstitution([bringup_pkg, "worlds", "dual_nero_empty.sdf"])
     controllers_file = PathJoinSubstitution([moveit_pkg, "config", "ros2_controllers.yaml"])
@@ -190,9 +192,9 @@ def generate_launch_description():
             SetEnvironmentVariable(
                 name="GZ_SIM_RESOURCE_PATH",
                 value=[
-                    description_pkg,
+                    description_model_root,
                     ":",
-                    bringup_pkg,
+                    bringup_model_root,
                     ":",
                     EnvironmentVariable("GZ_SIM_RESOURCE_PATH", default_value=""),
                 ],
