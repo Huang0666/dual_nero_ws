@@ -19,6 +19,7 @@
   <exec_depend>joint_trajectory_controller</exec_depend>
   <exec_depend>ros_gz_bridge</exec_depend>
   <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ign_ros2_control</exec_depend>
   <exec_depend>dual_nero_bridge</exec_depend>
   <exec_depend>dual_nero_description</exec_depend>
   <exec_depend>dual_nero_moveit_config</exec_depend>

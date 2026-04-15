@@ -8,3 +8,6 @@ simulation:
   world_file: ""
   robot_name: dual_nero
   z_offset: 0.0
+  sim_control_hardware_plugin: ign_ros2_control/IgnitionSystem
+  sim_control_system_plugin: libign_ros2_control-system.so
+  sim_control_system_plugin_name: ign_ros2_control::IgnitionROS2ControlPlugin

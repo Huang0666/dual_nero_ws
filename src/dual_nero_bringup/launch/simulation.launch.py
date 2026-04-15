@@ -25,8 +25,12 @@ def _startup_logs(context, *_args, **_kwargs):
     with_rviz = LaunchConfiguration("with_rviz").perform(context)
     with_gz_gui = LaunchConfiguration("with_gz_gui").perform(context)
     spawn_sim_controllers = LaunchConfiguration("spawn_sim_controllers").perform(context)
+    sim_control_hardware_plugin = LaunchConfiguration("sim_control_hardware_plugin").perform(context)
+    sim_control_system_plugin = LaunchConfiguration("sim_control_system_plugin").perform(context)
+    sim_control_system_plugin_name = LaunchConfiguration("sim_control_system_plugin_name").perform(context)
     use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
     gz_resource_path = EnvironmentVariable("GZ_SIM_RESOURCE_PATH", default_value="").perform(context)
+    ign_system_plugin_path = EnvironmentVariable("IGN_GAZEBO_SYSTEM_PLUGIN_PATH", default_value="").perform(context)
     return [
         LogInfo(msg=f"[sim] backend -> {backend}"),
         LogInfo(msg=f"[sim] world_file -> {world_file}"),
@@ -34,8 +38,12 @@ def _startup_logs(context, *_args, **_kwargs):
         LogInfo(msg=f"[sim] with_rviz -> {with_rviz}"),
         LogInfo(msg=f"[sim] with_gz_gui -> {with_gz_gui}"),
         LogInfo(msg=f"[sim] spawn_sim_controllers -> {spawn_sim_controllers}"),
+        LogInfo(msg=f"[sim] sim_control_hardware_plugin -> {sim_control_hardware_plugin}"),
+        LogInfo(msg=f"[sim] sim_control_system_plugin -> {sim_control_system_plugin}"),
+        LogInfo(msg=f"[sim] sim_control_system_plugin_name -> {sim_control_system_plugin_name}"),
         LogInfo(msg=f"[sim] use_sim_time -> {use_sim_time}"),
         LogInfo(msg=f"[sim] GZ_SIM_RESOURCE_PATH -> {gz_resource_path}"),
+        LogInfo(msg=f"[sim] IGN_GAZEBO_SYSTEM_PLUGIN_PATH -> {ign_system_plugin_path}"),
         LogInfo(
             msg="[sim] contract -> task entry, MoveIt groups, controller names, "
             "and FollowJointTrajectory remain aligned with P1-P4."
@@ -71,7 +79,7 @@ def _maybe_spawn_controllers(context, spawn_robot, *_args, **_kwargs):
         return [
             LogInfo(
                 msg="[sim] controller spawning -> disabled; "
-                "expect gz_ros2_control/controller_manager to load and activate controllers."
+                "expect ign_ros2_control/controller_manager to load and activate controllers."
             )
         ]
 
@@ -96,8 +104,10 @@ def generate_launch_description():
     description_pkg = FindPackageShare("dual_nero_description")
     moveit_pkg = FindPackageShare("dual_nero_moveit_config")
     bringup_pkg = FindPackageShare("dual_nero_bringup")
+    ign_control_pkg = FindPackageShare("ign_ros2_control")
     description_model_root = PathJoinSubstitution([description_pkg, ".."])
     bringup_model_root = PathJoinSubstitution([bringup_pkg, ".."])
+    ign_control_lib_path = PathJoinSubstitution([ign_control_pkg, "..", "..", "lib"])
 
     default_world = PathJoinSubstitution([bringup_pkg, "worlds", "dual_nero_empty.sdf"])
     controllers_file = PathJoinSubstitution([moveit_pkg, "config", "ros2_controllers.yaml"])
@@ -115,7 +125,14 @@ def generate_launch_description():
             "initial_positions_file:=",
             initial_positions_file,
             " ",
-            "hardware_plugin:=gz_ros2_control/GazeboSimSystem",
+            "hardware_plugin:=",
+            LaunchConfiguration("sim_control_hardware_plugin"),
+            " ",
+            "sim_system_plugin_filename:=",
+            LaunchConfiguration("sim_control_system_plugin"),
+            " ",
+            "sim_system_plugin_name:=",
+            LaunchConfiguration("sim_control_system_plugin_name"),
             " ",
             "use_gz_sim:=true",
             " ",
@@ -231,6 +248,21 @@ def generate_launch_description():
                 default_value=str(defaults.get("spawn_sim_controllers", False)).lower(),
                 description="Whether to manually spawn sim controllers after model creation. Default false because gz_ros2_control already activates them in the current sim path.",
             ),
+            DeclareLaunchArgument(
+                "sim_control_hardware_plugin",
+                default_value=str(defaults.get("sim_control_hardware_plugin", "ign_ros2_control/IgnitionSystem")),
+                description="ros2_control hardware plugin used by the sim robot description.",
+            ),
+            DeclareLaunchArgument(
+                "sim_control_system_plugin",
+                default_value=str(defaults.get("sim_control_system_plugin", "libign_ros2_control-system.so")),
+                description="Gazebo system plugin library used to host ros2_control in ign gazebo.",
+            ),
+            DeclareLaunchArgument(
+                "sim_control_system_plugin_name",
+                default_value=str(defaults.get("sim_control_system_plugin_name", "ign_ros2_control::IgnitionROS2ControlPlugin")),
+                description="Gazebo system plugin class name used to host ros2_control in ign gazebo.",
+            ),
             SetEnvironmentVariable(
                 name="GZ_SIM_RESOURCE_PATH",
                 value=[
@@ -239,6 +271,22 @@ def generate_launch_description():
                     bringup_model_root,
                     ":",
                     EnvironmentVariable("GZ_SIM_RESOURCE_PATH", default_value=""),
+                ],
+            ),
+            SetEnvironmentVariable(
+                name="IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
+                value=[
+                    ign_control_lib_path,
+                    ":",
+                    EnvironmentVariable("IGN_GAZEBO_SYSTEM_PLUGIN_PATH", default_value=""),
+                ],
+            ),
+            SetEnvironmentVariable(
+                name="GZ_SIM_SYSTEM_PLUGIN_PATH",
+                value=[
+                    ign_control_lib_path,
+                    ":",
+                    EnvironmentVariable("GZ_SIM_SYSTEM_PLUGIN_PATH", default_value=""),
                 ],
             ),
             OpaqueFunction(function=_startup_logs),

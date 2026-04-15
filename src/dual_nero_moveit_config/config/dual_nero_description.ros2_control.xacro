@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
     <xacro:macro
         name="dual_nero_description_ros2_control"
-        params="name initial_positions_file hardware_plugin:='mock_components/GenericSystem' use_gz_sim:='false' controllers_file:=''"
+        params="name initial_positions_file hardware_plugin:='mock_components/GenericSystem' use_gz_sim:='false' controllers_file:='' sim_system_plugin_filename:='libign_ros2_control-system.so' sim_system_plugin_name:='ign_ros2_control::IgnitionROS2ControlPlugin'"
     >
         <xacro:property name="initial_positions" value="${xacro.load_yaml(initial_positions_file)['initial_positions']}"/>
         <xacro:property name="gz_sim_enabled" value="${str(use_gz_sim).lower() == 'true'}"/>
@@ -114,8 +114,9 @@
 
         <xacro:if value="${gz_sim_enabled}">
             <gazebo>
-                <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+                <plugin filename="${sim_system_plugin_filename}" name="${sim_system_plugin_name}">
                     <parameters>${controllers_file}</parameters>
+                    <controller_manager_name>/controller_manager</controller_manager_name>
                 </plugin>
             </gazebo>
         </xacro:if>
