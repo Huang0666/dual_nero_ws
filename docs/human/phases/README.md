@@ -12,6 +12,8 @@
 - [p4/README.md](p4/README.md)
 - [p5/README.md](p5/README.md)
 - [p6/README.md](p6/README.md)
+- [p7/README.md](p7/README.md)
+- [p8/README.md](p8/README.md)
 
 ## 当前推荐阶段入口
 
@@ -19,6 +21,8 @@
 - P4 完成清单：[p4/completion_checklist.md](p4/completion_checklist.md)
 - P5 阶段定义：[p5/README.md](p5/README.md)
 - P6 阶段定义：[p6/README.md](p6/README.md)
+- P7 阶段定义：[p7/README.md](p7/README.md)
+- P8 阶段定义：[p8/README.md](p8/README.md)
 
 ## 规则
 

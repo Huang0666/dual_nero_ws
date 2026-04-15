@@ -13,7 +13,7 @@ import yaml
 from ament_index_python.packages import get_package_share_directory
 from control_msgs.action import FollowJointTrajectory
 from moveit_msgs.msg import Constraints, JointConstraint, MoveItErrorCodes, RobotState
-from moveit_msgs.srv import GetMotionPlan
+from moveit_msgs.srv import ApplyPlanningScene, GetMotionPlan
 from rclpy.action import ActionClient
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
@@ -28,6 +28,7 @@ from .moveit_validation_cli import (
     _read_moveit_error_details,
     follow_joint_trajectory_error_name,
 )
+from .planning_scene_utils import build_remove_all_scene, build_scene_diff, load_scene_profile
 
 
 @dataclass(slots=True)
@@ -44,11 +45,28 @@ class DualArmTaskDefinition:
     task_name: str
     group_name: str
     planning_mode: str
-    execution_mode: str
-    allow_return_to_safe: bool
+    default_execution_mode: str
+    default_failure_policy: str
+    scene_profile: str | None
     safe_positions: DualArmPose
-    prep_positions: DualArmPose
-    return_positions: DualArmPose
+
+
+@dataclass(slots=True)
+class TaskStageDefinition:
+    name: str
+    execution_mode: str
+    failure_policy: str
+    scene_profile: str | None
+    target_positions: DualArmPose
+
+    def as_dual_positions(self) -> list[float]:
+        return self.target_positions.as_dual_positions()
+
+
+@dataclass(slots=True)
+class LoadedDualArmTask:
+    definition: DualArmTaskDefinition
+    stages: list[TaskStageDefinition]
 
 
 @dataclass(slots=True)
@@ -56,11 +74,12 @@ class DualArmTaskPreview:
     task_name: str
     group_name: str
     planning_mode: str
-    execution_mode: str
+    default_execution_mode: str
+    default_failure_policy: str
     current_positions: list[float]
     safe_positions: list[float]
-    prep_positions: list[float]
-    return_positions: list[float]
+    scene_profile: str | None
+    stages: list[dict[str, Any]]
     plan_service: str
 
     def to_pretty_json(self) -> str:
@@ -111,8 +130,9 @@ class TaskFinalSummary:
     task_name: str
     overall_status: str
     target_mode: str
-    primary_stage: str
-    secondary_stage: str
+    completed_stages: list[str]
+    failed_stage: str | None
+    safe_return_status: str
 
     def to_pretty_json(self) -> str:
         return json.dumps(asdict(self), ensure_ascii=False, indent=2, sort_keys=True)
@@ -122,7 +142,7 @@ class DualArmTaskClient(Node):
     def __init__(
         self,
         *,
-        task: DualArmTaskDefinition,
+        task: LoadedDualArmTask,
         timeout_sec: float,
         result_timeout_sec: float,
         result_timeout_margin_sec: float,
@@ -134,8 +154,9 @@ class DualArmTaskClient(Node):
         acceleration_scaling: float,
         pipeline_id: str,
         planner_id: str,
+        scene_config_path: str | None,
     ) -> None:
-        super().__init__(f"{task.task_name}_task_client")
+        super().__init__(f"{task.definition.task_name}_task_client")
         self.task = task
         self.timeout_sec = float(timeout_sec)
         self.result_timeout_sec = float(result_timeout_sec)
@@ -148,11 +169,15 @@ class DualArmTaskClient(Node):
         self.acceleration_scaling = float(acceleration_scaling)
         self.pipeline_id = pipeline_id
         self.planner_id = planner_id
-        self.joint_names = list(GROUP_JOINTS[task.group_name])
+        self.scene_config_path = scene_config_path
+        self.joint_names = list(GROUP_JOINTS[task.definition.group_name])
         self._joint_state_msg: JointState | None = None
+        self._active_scene_profile: str | None = None
+        self._managed_scene_object_ids: set[str] = set()
 
         self.create_subscription(JointState, "/joint_states", self._joint_state_callback, 10)
         self._plan_client = self.create_client(GetMotionPlan, self.plan_service_name)
+        self._apply_scene_client = self.create_client(ApplyPlanningScene, "/apply_planning_scene")
         self._arm_action_clients = {
             "left": ActionClient(
                 self,
@@ -169,18 +194,35 @@ class DualArmTaskClient(Node):
     def build_preview(self) -> DualArmTaskPreview:
         current_positions = self._wait_for_current_positions()
         return DualArmTaskPreview(
-            task_name=self.task.task_name,
-            group_name=self.task.group_name,
-            planning_mode=self.task.planning_mode,
-            execution_mode=self.task.execution_mode,
+            task_name=self.task.definition.task_name,
+            group_name=self.task.definition.group_name,
+            planning_mode=self.task.definition.planning_mode,
+            default_execution_mode=self.task.definition.default_execution_mode,
+            default_failure_policy=self.task.definition.default_failure_policy,
             current_positions=current_positions,
-            safe_positions=self.task.safe_positions.as_dual_positions(),
-            prep_positions=self.task.prep_positions.as_dual_positions(),
-            return_positions=self.task.return_positions.as_dual_positions(),
+            safe_positions=self.task.definition.safe_positions.as_dual_positions(),
+            scene_profile=self.task.definition.scene_profile,
+            stages=[
+                {
+                    "name": stage.name,
+                    "execution_mode": stage.execution_mode,
+                    "failure_policy": stage.failure_policy,
+                    "scene_profile": stage.scene_profile,
+                    "target_positions": stage.as_dual_positions(),
+                }
+                for stage in self.task.stages
+            ],
             plan_service=self.plan_service_name,
         )
 
-    def plan_to_positions(self, *, stage: str, target_positions: list[float]) -> GetMotionPlan.Response:
+    def plan_to_positions(
+        self,
+        *,
+        stage: str,
+        target_positions: list[float],
+        scene_profile: str | None,
+    ) -> GetMotionPlan.Response:
+        self._ensure_scene_profile(scene_profile)
         if not self._plan_client.wait_for_service(timeout_sec=self.timeout_sec):
             raise RuntimeError(
                 f"MoveIt plan service {self.plan_service_name} was not available within "
@@ -189,7 +231,7 @@ class DualArmTaskClient(Node):
 
         request = GetMotionPlan.Request()
         motion_plan_request = request.motion_plan_request
-        motion_plan_request.group_name = self.task.group_name
+        motion_plan_request.group_name = self.task.definition.group_name
         motion_plan_request.num_planning_attempts = self.planning_attempts
         motion_plan_request.allowed_planning_time = self.planning_time_sec
         motion_plan_request.max_velocity_scaling_factor = self.velocity_scaling
@@ -217,9 +259,9 @@ class DualArmTaskClient(Node):
         motion_plan_response = response.motion_plan_response
         error_details = _read_moveit_error_details(motion_plan_response.error_code)
         return MoveItPlanSummary(
-            task_name=self.task.task_name,
+            task_name=self.task.definition.task_name,
             stage=stage,
-            group_name=self.task.group_name,
+            group_name=self.task.definition.group_name,
             error_code=int(error_details["code"]),
             error_name=str(error_details["name"]),
             message=str(error_details["message"]),
@@ -231,12 +273,12 @@ class DualArmTaskClient(Node):
     def execute_dual_arm_stage(
         self,
         *,
-        stage: str,
+        stage: TaskStageDefinition,
         response: GetMotionPlan.Response,
     ) -> TaskExecutionSummary:
         trajectory = response.motion_plan_response.trajectory.joint_trajectory
         if not trajectory.points:
-            raise RuntimeError(f"{stage} trajectory is empty.")
+            raise RuntimeError(f"{stage.name} trajectory is empty.")
 
         left_goal, right_goal = self._split_dual_final_point(trajectory)
         left_target = "/left_arm_controller/follow_joint_trajectory"
@@ -251,84 +293,46 @@ class DualArmTaskClient(Node):
                 f"Bridge action server {right_target} was not available within {self.timeout_sec:.1f}s."
             )
 
-        left_future = self._arm_action_clients["left"].send_goal_async(left_goal)
-        right_future = self._arm_action_clients["right"].send_goal_async(right_goal)
-        left_handle = self._wait_for_future(left_future, f"{stage} left-arm goal request")
-        right_handle = self._wait_for_future(right_future, f"{stage} right-arm goal request")
-
-        left_accepted = bool(left_handle and left_handle.accepted)
-        right_accepted = bool(right_handle and right_handle.accepted)
-        if not left_accepted or not right_accepted:
-            self._cancel_if_possible(left_handle)
-            self._cancel_if_possible(right_handle)
-            return TaskExecutionSummary(
-                task_name=self.task.task_name,
-                stage=stage,
-                mode=self.task.execution_mode,
-                overall_status="failed",
-                left_arm=ArmGoalSummary(
-                    arm="left",
-                    target_name=left_target,
-                    accepted=left_accepted,
-                    error_code=None,
-                    error_name="REJECTED" if not left_accepted else "CANCELLED",
-                    error_string="" if left_accepted else f"{left_target} rejected the goal.",
-                ),
-                right_arm=ArmGoalSummary(
-                    arm="right",
-                    target_name=right_target,
-                    accepted=right_accepted,
-                    error_code=None,
-                    error_name="REJECTED" if not right_accepted else "CANCELLED",
-                    error_string="" if right_accepted else f"{right_target} rejected the goal.",
-                ),
-            )
-
-        left_result_future = left_handle.get_result_async()
-        right_result_future = right_handle.get_result_async()
         result_timeout = self._result_wait_timeout_sec(trajectory)
-        left_result_handle = self._wait_for_future(
-            left_result_future,
-            f"{stage} left-arm result",
-            timeout_sec=result_timeout,
-        )
-        right_result_handle = self._wait_for_future(
-            right_result_future,
-            f"{stage} right-arm result",
-            timeout_sec=result_timeout,
-        )
-        left_result = left_result_handle.result
-        right_result = right_result_handle.result
-        left_code = int(left_result.error_code)
-        right_code = int(right_result.error_code)
+        goal_map = {"left": left_goal, "right": right_goal}
+        target_map = {"left": left_target, "right": right_target}
+        if stage.execution_mode == "sync":
+            left_summary, right_summary = self._execute_sync_goals(
+                stage_name=stage.name,
+                goals=goal_map,
+                targets=target_map,
+                result_timeout=result_timeout,
+            )
+        elif stage.execution_mode == "serial_left_first":
+            left_summary, right_summary = self._execute_serial_goals(
+                stage_name=stage.name,
+                goals=goal_map,
+                targets=target_map,
+                result_timeout=result_timeout,
+                first_arm="left",
+            )
+        else:
+            left_summary, right_summary = self._execute_serial_goals(
+                stage_name=stage.name,
+                goals=goal_map,
+                targets=target_map,
+                result_timeout=result_timeout,
+                first_arm="right",
+            )
 
         overall_status = (
             "success"
-            if left_code == FollowJointTrajectory.Result.SUCCESSFUL
-            and right_code == FollowJointTrajectory.Result.SUCCESSFUL
+            if left_summary.error_code == FollowJointTrajectory.Result.SUCCESSFUL
+            and right_summary.error_code == FollowJointTrajectory.Result.SUCCESSFUL
             else "failed"
         )
         return TaskExecutionSummary(
-            task_name=self.task.task_name,
-            stage=stage,
-            mode=self.task.execution_mode,
+            task_name=self.task.definition.task_name,
+            stage=stage.name,
+            mode=stage.execution_mode,
             overall_status=overall_status,
-            left_arm=ArmGoalSummary(
-                arm="left",
-                target_name=left_target,
-                accepted=True,
-                error_code=left_code,
-                error_name=follow_joint_trajectory_error_name(left_code),
-                error_string=str(left_result.error_string),
-            ),
-            right_arm=ArmGoalSummary(
-                arm="right",
-                target_name=right_target,
-                accepted=True,
-                error_code=right_code,
-                error_name=follow_joint_trajectory_error_name(right_code),
-                error_string=str(right_result.error_string),
-            ),
+            left_arm=left_summary,
+            right_arm=right_summary,
         )
 
     def _wait_for_current_positions(self) -> list[float]:
@@ -351,7 +355,7 @@ class DualArmTaskClient(Node):
         missing = [joint_name for joint_name in self.joint_names if joint_name not in name_to_position]
         if missing:
             raise RuntimeError(
-                f"/joint_states is missing expected joints for {self.task.group_name}: {missing}"
+                f"/joint_states is missing expected joints for {self.task.definition.group_name}: {missing}"
             )
         return [float(name_to_position[joint_name]) for joint_name in self.joint_names]
 
@@ -365,7 +369,7 @@ class DualArmTaskClient(Node):
 
     def _build_goal_constraints(self, *, stage: str, target_positions: list[float]) -> Constraints:
         constraints = Constraints()
-        constraints.name = f"{self.task.task_name}_{stage}_goal"
+        constraints.name = f"{self.task.definition.task_name}_{stage}_goal"
         constraints.joint_constraints = [
             self._build_joint_constraint(joint_name, target_position)
             for joint_name, target_position in zip(self.joint_names, target_positions, strict=True)
@@ -430,6 +434,178 @@ class DualArmTaskClient(Node):
         point.time_from_start = final_point.time_from_start
         return point
 
+    def _execute_sync_goals(
+        self,
+        *,
+        stage_name: str,
+        goals: dict[str, FollowJointTrajectory.Goal],
+        targets: dict[str, str],
+        result_timeout: float,
+    ) -> tuple[ArmGoalSummary, ArmGoalSummary]:
+        left_future = self._arm_action_clients["left"].send_goal_async(goals["left"])
+        right_future = self._arm_action_clients["right"].send_goal_async(goals["right"])
+        left_handle = self._wait_for_future(left_future, f"{stage_name} left-arm goal request")
+        right_handle = self._wait_for_future(right_future, f"{stage_name} right-arm goal request")
+
+        left_accepted = bool(left_handle and left_handle.accepted)
+        right_accepted = bool(right_handle and right_handle.accepted)
+        if not left_accepted or not right_accepted:
+            self._cancel_if_possible(left_handle)
+            self._cancel_if_possible(right_handle)
+            return (
+                self._goal_rejected_summary("left", targets["left"]) if not left_accepted
+                else self._goal_cancelled_summary("left", targets["left"]),
+                self._goal_rejected_summary("right", targets["right"]) if not right_accepted
+                else self._goal_cancelled_summary("right", targets["right"]),
+            )
+
+        left_result = self._wait_for_future(
+            left_handle.get_result_async(),
+            f"{stage_name} left-arm result",
+            timeout_sec=result_timeout,
+        ).result
+        right_result = self._wait_for_future(
+            right_handle.get_result_async(),
+            f"{stage_name} right-arm result",
+            timeout_sec=result_timeout,
+        ).result
+        return (
+            self._result_summary("left", targets["left"], left_result),
+            self._result_summary("right", targets["right"], right_result),
+        )
+
+    def _execute_serial_goals(
+        self,
+        *,
+        stage_name: str,
+        goals: dict[str, FollowJointTrajectory.Goal],
+        targets: dict[str, str],
+        result_timeout: float,
+        first_arm: str,
+    ) -> tuple[ArmGoalSummary, ArmGoalSummary]:
+        second_arm = "right" if first_arm == "left" else "left"
+        first_summary = self._execute_single_goal(
+            arm=first_arm,
+            stage_name=stage_name,
+            goal=goals[first_arm],
+            target_name=targets[first_arm],
+            result_timeout=result_timeout,
+        )
+        if first_summary.error_code != FollowJointTrajectory.Result.SUCCESSFUL:
+            second_summary = self._not_executed_summary(
+                second_arm,
+                targets[second_arm],
+                reason=f"{first_arm} arm failed before serial handoff.",
+            )
+        else:
+            second_summary = self._execute_single_goal(
+                arm=second_arm,
+                stage_name=stage_name,
+                goal=goals[second_arm],
+                target_name=targets[second_arm],
+                result_timeout=result_timeout,
+            )
+
+        if first_arm == "left":
+            return first_summary, second_summary
+        return second_summary, first_summary
+
+    def _execute_single_goal(
+        self,
+        *,
+        arm: str,
+        stage_name: str,
+        goal: FollowJointTrajectory.Goal,
+        target_name: str,
+        result_timeout: float,
+    ) -> ArmGoalSummary:
+        goal_future = self._arm_action_clients[arm].send_goal_async(goal)
+        goal_handle = self._wait_for_future(goal_future, f"{stage_name} {arm}-arm goal request")
+        if not goal_handle or not goal_handle.accepted:
+            return self._goal_rejected_summary(arm, target_name)
+
+        result = self._wait_for_future(
+            goal_handle.get_result_async(),
+            f"{stage_name} {arm}-arm result",
+            timeout_sec=result_timeout,
+        ).result
+        return self._result_summary(arm, target_name, result)
+
+    def _goal_rejected_summary(self, arm: str, target_name: str) -> ArmGoalSummary:
+        return ArmGoalSummary(
+            arm=arm,
+            target_name=target_name,
+            accepted=False,
+            error_code=None,
+            error_name="REJECTED",
+            error_string=f"{target_name} rejected the goal.",
+        )
+
+    def _goal_cancelled_summary(self, arm: str, target_name: str) -> ArmGoalSummary:
+        return ArmGoalSummary(
+            arm=arm,
+            target_name=target_name,
+            accepted=True,
+            error_code=None,
+            error_name="CANCELLED",
+            error_string="Goal was cancelled because the paired arm was rejected.",
+        )
+
+    def _not_executed_summary(self, arm: str, target_name: str, *, reason: str) -> ArmGoalSummary:
+        return ArmGoalSummary(
+            arm=arm,
+            target_name=target_name,
+            accepted=False,
+            error_code=None,
+            error_name="NOT_EXECUTED",
+            error_string=reason,
+        )
+
+    def _result_summary(self, arm: str, target_name: str, result) -> ArmGoalSummary:
+        result_code = int(result.error_code)
+        return ArmGoalSummary(
+            arm=arm,
+            target_name=target_name,
+            accepted=True,
+            error_code=result_code,
+            error_name=follow_joint_trajectory_error_name(result_code),
+            error_string=str(result.error_string),
+        )
+
+    def _ensure_scene_profile(self, scene_profile: str | None) -> None:
+        if scene_profile == self._active_scene_profile:
+            return
+        if scene_profile is None:
+            if self._managed_scene_object_ids:
+                self._apply_planning_scene(build_remove_all_scene(self._managed_scene_object_ids))
+                self._managed_scene_object_ids = set()
+            self._active_scene_profile = None
+            return
+        if not self.scene_config_path:
+            raise RuntimeError(
+                f"Scene profile {scene_profile!r} was requested but no --scene-config was provided."
+            )
+        profile = load_scene_profile(self.scene_config_path, scene_profile)
+        planning_scene = build_scene_diff(
+            profile=profile,
+            previous_object_ids=self._managed_scene_object_ids,
+        )
+        self._apply_planning_scene(planning_scene)
+        self._managed_scene_object_ids = set(profile.object_ids)
+        self._active_scene_profile = scene_profile
+
+    def _apply_planning_scene(self, planning_scene) -> None:
+        if not self._apply_scene_client.wait_for_service(timeout_sec=self.timeout_sec):
+            raise RuntimeError(
+                f"MoveIt apply_planning_scene service was not available within {self.timeout_sec:.1f}s."
+            )
+        request = ApplyPlanningScene.Request()
+        request.scene = planning_scene
+        future = self._apply_scene_client.call_async(request)
+        response = self._wait_for_future(future, "apply planning scene")
+        if not response.success:
+            raise RuntimeError("MoveIt rejected the planning scene update.")
+
     def _wait_for_future(self, future, label: str, *, timeout_sec: float | None = None):
         wait_timeout_sec = self.timeout_sec if timeout_sec is None else float(timeout_sec)
         rclpy.spin_until_future_complete(self, future, timeout_sec=wait_timeout_sec)
@@ -459,25 +635,24 @@ class DualArmTaskClient(Node):
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run a formal P4 dual-arm task through MoveIt dual_arms planning and bridge single-point execution.",
+        description="Run a dual-arm task through MoveIt dual_arms planning and bridge execution.",
     )
     parser.add_argument(
         "--task",
         default="dual_prep_sync",
-        help="Task name defined in the P4 task YAML.",
+        help="Task name defined in the task YAML.",
     )
     parser.add_argument(
         "--task-config",
         default=str(_default_task_config_path()),
-        help="Path to the P4 task YAML.",
+        help="Path to the task YAML.",
     )
     parser.add_argument(
         "--target",
-        choices=["full", "prep", "safe", "return"],
         default="full",
         help=(
-            "Execution target. 'full' means move to prep_positions and then optionally "
-            "return_positions. 'safe' moves directly to safe_positions."
+            "Execution target. 'full' runs the task stage list in order. Any explicit stage name "
+            "runs only that stage. 'safe' always moves directly to safe_positions."
         ),
     )
     parser.add_argument(
@@ -543,56 +718,83 @@ def build_parser() -> argparse.ArgumentParser:
         default="/plan_kinematic_path",
         help="MoveIt planning service name.",
     )
+    parser.add_argument(
+        "--scene-config",
+        default=str(_default_scene_config_path()),
+        help="Path to the planning-scene YAML. Only used when a task or stage declares scene_profile.",
+    )
     return parser
 
 
-def load_task_definition(path: str | Path, task_name: str) -> DualArmTaskDefinition:
+def load_task_definition(path: str | Path, task_name: str) -> LoadedDualArmTask:
     yaml_path = Path(path)
     if not yaml_path.is_file():
-        raise FileNotFoundError(f"P4 task config file does not exist: {yaml_path}")
+        raise FileNotFoundError(f"Task config file does not exist: {yaml_path}")
 
     with yaml_path.open("r", encoding="utf-8") as file_obj:
         data = yaml.safe_load(file_obj) or {}
     if not isinstance(data, dict):
-        raise RuntimeError(f"P4 task config must be a mapping: {yaml_path}")
+        raise RuntimeError(f"Task config must be a mapping: {yaml_path}")
 
     tasks = data.get("tasks")
     if not isinstance(tasks, dict):
-        raise RuntimeError(f"P4 task config must contain a 'tasks' mapping: {yaml_path}")
+        raise RuntimeError(f"Task config must contain a 'tasks' mapping: {yaml_path}")
 
     task_data = tasks.get(task_name)
     if not isinstance(task_data, dict):
         known = sorted(tasks)
-        raise RuntimeError(f"P4 task {task_name!r} was not found. Known tasks: {known}")
+        raise RuntimeError(f"Task {task_name!r} was not found. Known tasks: {known}")
 
     normalized_task_name = str(task_data.get("task_name", task_name))
     group_name = str(task_data.get("group_name", ""))
     planning_mode = str(task_data.get("planning_mode", ""))
-    execution_mode = str(task_data.get("execution_mode", ""))
-    allow_return_to_safe = bool(task_data.get("allow_return_to_safe", True))
+    default_execution_mode = _normalize_execution_mode(
+        task_data.get("execution_mode", "sync"),
+        label=f"{normalized_task_name}.execution_mode",
+    )
+    default_failure_policy = _normalize_failure_policy(
+        task_data.get("failure_policy", "abort"),
+        label=f"{normalized_task_name}.failure_policy",
+    )
+    scene_profile = _normalize_optional_string(task_data.get("scene_profile"))
     if group_name != "dual_arms":
         raise RuntimeError(f"{normalized_task_name} must use group_name=dual_arms, got {group_name!r}.")
     if planning_mode != "dual_arms":
         raise RuntimeError(
             f"{normalized_task_name} must use planning_mode=dual_arms, got {planning_mode!r}."
         )
-    if execution_mode != "sync":
-        raise RuntimeError(
-            f"{normalized_task_name} must use execution_mode=sync, got {execution_mode!r}."
-        )
 
     safe_positions = _load_dual_arm_pose(task_data, field_name="safe_positions")
-    prep_positions = _load_dual_arm_pose(task_data, field_name="prep_positions")
-    return_positions = _load_dual_arm_pose(task_data, field_name="return_positions", default=safe_positions)
-    return DualArmTaskDefinition(
-        task_name=normalized_task_name,
-        group_name=group_name,
-        planning_mode=planning_mode,
-        execution_mode=execution_mode,
-        allow_return_to_safe=allow_return_to_safe,
-        safe_positions=safe_positions,
-        prep_positions=prep_positions,
-        return_positions=return_positions,
+    stages_data = task_data.get("stages")
+    if isinstance(stages_data, list):
+        stages = _load_stage_definitions(
+            stages_data,
+            task_name=normalized_task_name,
+            default_execution_mode=default_execution_mode,
+            default_failure_policy=default_failure_policy,
+            default_scene_profile=scene_profile,
+        )
+    else:
+        stages = _load_legacy_stage_definitions(
+            task_data,
+            task_name=normalized_task_name,
+            default_execution_mode=default_execution_mode,
+            default_failure_policy=default_failure_policy,
+            default_scene_profile=scene_profile,
+            safe_positions=safe_positions,
+        )
+
+    return LoadedDualArmTask(
+        definition=DualArmTaskDefinition(
+            task_name=normalized_task_name,
+            group_name=group_name,
+            planning_mode=planning_mode,
+            default_execution_mode=default_execution_mode,
+            default_failure_policy=default_failure_policy,
+            scene_profile=scene_profile,
+            safe_positions=safe_positions,
+        ),
+        stages=stages,
     )
 
 
@@ -623,8 +825,110 @@ def _load_dual_arm_pose(
     return DualArmPose(left_positions=left_positions, right_positions=right_positions)
 
 
+def _load_stage_definitions(
+    stages_data: list[Any],
+    *,
+    task_name: str,
+    default_execution_mode: str,
+    default_failure_policy: str,
+    default_scene_profile: str | None,
+) -> list[TaskStageDefinition]:
+    if not stages_data:
+        raise RuntimeError(f"{task_name} must define at least one stage.")
+
+    stages: list[TaskStageDefinition] = []
+    seen_names: set[str] = set()
+    for index, stage_data in enumerate(stages_data, start=1):
+        if not isinstance(stage_data, dict):
+            raise RuntimeError(f"{task_name}.stages[{index}] must be a mapping.")
+        stage_name = str(stage_data.get("name", "")).strip()
+        if not stage_name:
+            raise RuntimeError(f"{task_name}.stages[{index}] is missing name.")
+        if stage_name in seen_names:
+            raise RuntimeError(f"{task_name} has duplicate stage name {stage_name!r}.")
+        seen_names.add(stage_name)
+        positions = _load_dual_arm_pose(stage_data, field_name="positions")
+        stages.append(
+            TaskStageDefinition(
+                name=stage_name,
+                execution_mode=_normalize_execution_mode(
+                    stage_data.get("execution_mode", default_execution_mode),
+                    label=f"{task_name}.stages[{stage_name}].execution_mode",
+                ),
+                failure_policy=_normalize_failure_policy(
+                    stage_data.get("failure_policy", default_failure_policy),
+                    label=f"{task_name}.stages[{stage_name}].failure_policy",
+                ),
+                scene_profile=_normalize_optional_string(stage_data.get("scene_profile", default_scene_profile)),
+                target_positions=positions,
+            )
+        )
+    return stages
+
+
+def _load_legacy_stage_definitions(
+    task_data: dict[str, Any],
+    *,
+    task_name: str,
+    default_execution_mode: str,
+    default_failure_policy: str,
+    default_scene_profile: str | None,
+    safe_positions: DualArmPose,
+) -> list[TaskStageDefinition]:
+    prep_positions = _load_dual_arm_pose(task_data, field_name="prep_positions")
+    allow_return_to_safe = bool(task_data.get("allow_return_to_safe", True))
+    return_positions = _load_dual_arm_pose(task_data, field_name="return_positions", default=safe_positions)
+    stages = [
+        TaskStageDefinition(
+            name="prep",
+            execution_mode=default_execution_mode,
+            failure_policy=default_failure_policy,
+            scene_profile=default_scene_profile,
+            target_positions=prep_positions,
+        )
+    ]
+    if allow_return_to_safe:
+        stages.append(
+            TaskStageDefinition(
+                name="return",
+                execution_mode=default_execution_mode,
+                failure_policy="abort",
+                scene_profile=default_scene_profile,
+                target_positions=return_positions,
+            )
+        )
+    return stages
+
+
+def _normalize_execution_mode(value: Any, *, label: str) -> str:
+    normalized = str(value).strip()
+    allowed = {"sync", "serial_left_first", "serial_right_first"}
+    if normalized not in allowed:
+        raise RuntimeError(f"{label} must be one of {sorted(allowed)}, got {normalized!r}.")
+    return normalized
+
+
+def _normalize_failure_policy(value: Any, *, label: str) -> str:
+    normalized = str(value).strip()
+    allowed = {"abort", "return_safe"}
+    if normalized not in allowed:
+        raise RuntimeError(f"{label} must be one of {sorted(allowed)}, got {normalized!r}.")
+    return normalized
+
+
+def _normalize_optional_string(value: Any) -> str | None:
+    if value is None:
+        return None
+    normalized = str(value).strip()
+    return normalized or None
+
+
 def _default_task_config_path() -> Path:
     return Path(get_package_share_directory("dual_nero_bridge")) / "config" / "p4_tasks.yaml"
+
+
+def _default_scene_config_path() -> Path:
+    return Path(get_package_share_directory("dual_nero_bridge")) / "config" / "p5_scene_sim.yaml"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -650,57 +954,66 @@ def main(argv: list[str] | None = None) -> int:
         acceleration_scaling=args.acceleration_scaling,
         pipeline_id=args.pipeline_id,
         planner_id=args.planner_id,
+        scene_config_path=args.scene_config,
     )
 
     try:
         preview = node.build_preview()
         print(preview.to_pretty_json())
 
-        primary_stage_name, primary_target_positions = _resolve_primary_stage(
-            task_definition=task_definition,
-            target=args.target,
-        )
-        primary_response = node.plan_to_positions(
-            stage=primary_stage_name,
-            target_positions=primary_target_positions,
-        )
-        primary_plan_summary = node.summarize_plan(stage=primary_stage_name, response=primary_response)
-        print(primary_plan_summary.to_pretty_json())
-        if primary_plan_summary.error_code != MoveItErrorCodes.SUCCESS:
-            return 1
-
-        primary_execution_summary = node.execute_dual_arm_stage(
-            stage=primary_stage_name,
-            response=primary_response,
-        )
-        print(primary_execution_summary.to_pretty_json())
-        if primary_execution_summary.overall_status != "success":
-            return 1
-
-        secondary_stage_status = "skipped"
-        if args.target == "full" and task_definition.allow_return_to_safe:
-            return_response = node.plan_to_positions(
-                stage="return",
-                target_positions=task_definition.return_positions.as_dual_positions(),
+        selected_stages = _resolve_requested_stages(task_definition, args.target)
+        completed_stages: list[str] = []
+        safe_return_status = "not_requested"
+        for stage in selected_stages:
+            stage_response = node.plan_to_positions(
+                stage=stage.name,
+                target_positions=stage.as_dual_positions(),
+                scene_profile=stage.scene_profile,
             )
-            return_plan_summary = node.summarize_plan(stage="return", response=return_response)
-            print(return_plan_summary.to_pretty_json())
-            if return_plan_summary.error_code != MoveItErrorCodes.SUCCESS:
+            stage_plan_summary = node.summarize_plan(stage=stage.name, response=stage_response)
+            print(stage_plan_summary.to_pretty_json())
+            if stage_plan_summary.error_code != MoveItErrorCodes.SUCCESS:
+                safe_return_status = _attempt_safe_return(node=node, task_definition=task_definition, failed_stage=stage)
+                print(
+                    TaskFinalSummary(
+                        task_name=task_definition.definition.task_name,
+                        overall_status="failed",
+                        target_mode=args.target,
+                        completed_stages=completed_stages,
+                        failed_stage=stage.name,
+                        safe_return_status=safe_return_status,
+                    ).to_pretty_json()
+                )
                 return 1
 
-            return_execution_summary = node.execute_dual_arm_stage(stage="return", response=return_response)
-            print(return_execution_summary.to_pretty_json())
-            if return_execution_summary.overall_status != "success":
+            stage_execution_summary = node.execute_dual_arm_stage(
+                stage=stage,
+                response=stage_response,
+            )
+            print(stage_execution_summary.to_pretty_json())
+            if stage_execution_summary.overall_status != "success":
+                safe_return_status = _attempt_safe_return(node=node, task_definition=task_definition, failed_stage=stage)
+                print(
+                    TaskFinalSummary(
+                        task_name=task_definition.definition.task_name,
+                        overall_status="failed",
+                        target_mode=args.target,
+                        completed_stages=completed_stages,
+                        failed_stage=stage.name,
+                        safe_return_status=safe_return_status,
+                    ).to_pretty_json()
+                )
                 return 1
-            secondary_stage_status = "success"
+            completed_stages.append(stage.name)
 
         print(
             TaskFinalSummary(
-                task_name=task_definition.task_name,
+                task_name=task_definition.definition.task_name,
                 overall_status="success",
                 target_mode=args.target,
-                primary_stage="success",
-                secondary_stage=secondary_stage_status,
+                completed_stages=completed_stages,
+                failed_stage=None,
+                safe_return_status=safe_return_status,
             ).to_pretty_json()
         )
         return 0
@@ -712,18 +1025,64 @@ def main(argv: list[str] | None = None) -> int:
         rclpy.shutdown()
 
 
-def _resolve_primary_stage(
+def _resolve_requested_stages(
     *,
-    task_definition: DualArmTaskDefinition,
+    task_definition: LoadedDualArmTask,
     target: str,
-) -> tuple[str, list[float]]:
-    if target == "prep":
-        return "prep", task_definition.prep_positions.as_dual_positions()
+) -> list[TaskStageDefinition]:
     if target == "safe":
-        return "safe", task_definition.safe_positions.as_dual_positions()
-    if target == "return":
-        return "return", task_definition.return_positions.as_dual_positions()
-    return "prep", task_definition.prep_positions.as_dual_positions()
+        return [
+            TaskStageDefinition(
+                name="safe",
+                execution_mode=task_definition.definition.default_execution_mode,
+                failure_policy="abort",
+                scene_profile=task_definition.definition.scene_profile,
+                target_positions=task_definition.definition.safe_positions,
+            )
+        ]
+    if target == "full":
+        return list(task_definition.stages)
+
+    for stage in task_definition.stages:
+        if stage.name == target:
+            return [stage]
+
+    known_targets = ["full", "safe", *[stage.name for stage in task_definition.stages]]
+    raise RuntimeError(f"Unknown target {target!r}. Known targets: {known_targets}")
+
+
+def _attempt_safe_return(
+    *,
+    node: DualArmTaskClient,
+    task_definition: LoadedDualArmTask,
+    failed_stage: TaskStageDefinition,
+) -> str:
+    if failed_stage.failure_policy != "return_safe":
+        return "not_requested"
+    if failed_stage.name == "safe":
+        return "skipped"
+
+    safe_stage = TaskStageDefinition(
+        name="safe",
+        execution_mode=task_definition.definition.default_execution_mode,
+        failure_policy="abort",
+        scene_profile=task_definition.definition.scene_profile,
+        target_positions=task_definition.definition.safe_positions,
+    )
+    safe_response = node.plan_to_positions(
+        stage=safe_stage.name,
+        target_positions=safe_stage.as_dual_positions(),
+        scene_profile=safe_stage.scene_profile,
+    )
+    safe_plan_summary = node.summarize_plan(stage=safe_stage.name, response=safe_response)
+    print(safe_plan_summary.to_pretty_json())
+    if safe_plan_summary.error_code != MoveItErrorCodes.SUCCESS:
+        return "plan_failed"
+    safe_execution_summary = node.execute_dual_arm_stage(stage=safe_stage, response=safe_response)
+    print(safe_execution_summary.to_pretty_json())
+    if safe_execution_summary.overall_status != "success":
+        return "execute_failed"
+    return "success"
 
 
 if __name__ == "__main__":

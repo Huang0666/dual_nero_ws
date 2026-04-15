@@ -124,11 +124,11 @@
   <text x="96" y="980" class="small">P6 关注“感知接入后仍能形成任务闭环”，不是直接追复杂操作。</text>
 
   <rect x="580" y="816" width="470" height="190" rx="22" fill="#f3efff" stroke="#c3b2e7"/>
-  <text x="606" y="848" class="label">P7 复杂场景与抓取扩展</text>
+  <text x="606" y="848" class="label">P7-P8 后续增强路线</text>
   <text x="606" y="876" class="body">候选方向：</text>
-  <text x="606" y="900" class="body">- 更复杂障碍物场景</text>
-  <text x="606" y="924" class="body">- 更复杂抓取 / 操作流程</text>
-  <text x="606" y="948" class="body">- 多目标 / 多步骤任务链</text>
+  <text x="606" y="900" class="body">- P7：动态障碍物 / 调度增强</text>
+  <text x="606" y="924" class="body">- P7：按需评估 MTC / BehaviorTree</text>
+  <text x="606" y="948" class="body">- P8：复杂真机验收 / 复杂抓取</text>
   <text x="606" y="980" class="small">只有在 P6 闭环稳定后才进入，不提前展开。</text>
 
   <rect x="1090" y="816" width="440" height="190" rx="22" fill="#fff3f3" stroke="#efb7b7"/>

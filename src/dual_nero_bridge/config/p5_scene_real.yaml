@@ -1,0 +1,4 @@
+profiles:
+  real_placeholder:
+    frame_id: world
+    obstacles: []

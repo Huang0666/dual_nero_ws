@@ -39,6 +39,8 @@
 - P4 完成清单：[phases/p4/completion_checklist.md](phases/p4/completion_checklist.md)
 - P5 阶段定义：[phases/p5/README.md](phases/p5/README.md)
 - P6 阶段定义：[phases/p6/README.md](phases/p6/README.md)
+- P7 阶段定义：[phases/p7/README.md](phases/p7/README.md)
+- P8 阶段定义：[phases/p8/README.md](phases/p8/README.md)
 - 工位与模型对齐清单：[operations/hardware_alignment_checklist.md](operations/hardware_alignment_checklist.md)
 - 仿真运行手册：[operations/simulation_runbook.md](operations/simulation_runbook.md)
 - P2 验收：[phases/p2/acceptance_report.md](phases/p2/acceptance_report.md)

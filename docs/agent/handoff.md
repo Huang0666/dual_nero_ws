@@ -5,7 +5,7 @@
 - P1 已完成
 - P2 已完成并通过现场验收
 - P3 主体已完成
-- 当前进入 `P4 双臂固定场景任务闭环`
+- 当前进入 `P5-Sim 第一版实施阶段`
 
 ## 当前有效结论
 
@@ -17,19 +17,19 @@
 - 当前阶段口径：
   - `P4-A` 已完成
   - `P4-B` 延期
-  - `P5-Sim` 规划启动，可进入实现
+  - `P5-Sim` 第一版实施中
 
 ## 当前暂停点
 
 - 当前不再卡在仿真后端
-- 当前剩余问题主要是真机部分延期，以及后续 P5-Sim 能力设计
+- 当前剩余问题主要是真机部分延期，以及 P5-v1 能力逐步接入与 Linux 仿真回归验证
 
 ## 下一步
 
-- 先按 `docs/human/phases/p5/README.md` 进入 P5-Sim
+- 先按 `docs/human/phases/p5/README.md` 做 P5-v1
 - 同时把 P6 进入条件固定在 `docs/human/phases/p6/README.md`
+- 把动态障碍物 / 复杂调度 / 复杂真机验收挂到 `docs/human/phases/p7/README.md` 和 `docs/human/phases/p8/README.md`
 - 再等工位与模型对齐恢复 P4-B 真机工作
-- 最后回到真机做闭环验收
 
 ## 关键文档入口
 
@@ -37,3 +37,4 @@
 - 下一步任务：[../human/overview/next_actions.md](../human/overview/next_actions.md)
 - 仿真手册：[../human/operations/simulation_runbook.md](../human/operations/simulation_runbook.md)
 - P4 定义：[../human/phases/p4/README.md](../human/phases/p4/README.md)
+- P5 定义：[../human/phases/p5/README.md](../human/phases/p5/README.md)

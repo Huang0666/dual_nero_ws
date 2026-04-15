@@ -61,3 +61,5 @@
 - P4：[../human/phases/p4/README.md](../human/phases/p4/README.md)
 - P5：[../human/phases/p5/README.md](../human/phases/p5/README.md)
 - P6：[../human/phases/p6/README.md](../human/phases/p6/README.md)
+- P7：[../human/phases/p7/README.md](../human/phases/p7/README.md)
+- P8：[../human/phases/p8/README.md](../human/phases/p8/README.md)

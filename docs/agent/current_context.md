@@ -5,7 +5,7 @@
 - P1：已完成
 - P2：已完成并通过现场验收
 - P3：主体已完成
-- 当前阶段：`P5-Sim 规划启动阶段`
+- 当前阶段：`P5-Sim 第一版实施阶段`
 
 ## 最近已完成
 
@@ -21,7 +21,7 @@
 - 当前阶段口径：
   - `P4-A 仿真执行链`：已完成
   - `P4-B 真机固定场景闭环`：延期
-  - `P5-Sim`：规划启动，可进入实现
+  - `P5-Sim`：第一版实施中
 
 ## 当前正式路径
 
@@ -39,9 +39,10 @@
 
 ## 当前优先级
 
-1. 按 [../human/phases/p5/README.md](../human/phases/p5/README.md) 启动 P5-Sim
+1. 按 [../human/phases/p5/README.md](../human/phases/p5/README.md) 继续做 P5-v1：多 stage task、最小协同语义、最小失败策略、能力验证场景
 2. 保留 P4-B 真机部分，等待工位与模型对齐恢复
 3. 按 [../human/phases/p6/README.md](../human/phases/p6/README.md) 规划 P6 进入条件
+4. 把动态障碍物 / 复杂调度 / 复杂真机验收挂到 P7 / P8，而不是塞回 P5
 
 ## 当前应优先参考
 
@@ -49,3 +50,4 @@
 - [../human/overview/next_actions.md](../human/overview/next_actions.md)
 - [../human/operations/simulation_runbook.md](../human/operations/simulation_runbook.md)
 - [../human/phases/p4/README.md](../human/phases/p4/README.md)
+- [../human/phases/p5/README.md](../human/phases/p5/README.md)
