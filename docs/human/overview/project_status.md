@@ -7,41 +7,27 @@
 - P3 主体已完成：
   - P3-A：故障恢复 SOP 已落地。
   - P3-B：MoveIt 主路径已完成现场验证。
-  - P3-C：USB-CAN 固定命名保持暂缓，作为后续待办。
-- 当前架构仍为 bridge，未切到 native `ros2_control`。
-- 项目当前进入 `P4 双臂固定场景任务闭环` 阶段。
-- 真机成果保留，但当前后续开发主线切到 `Gazebo Harmonic / gz sim` 仿真。
-
-参考：
-
-- [../phases/p2/acceptance_report.md](../phases/p2/acceptance_report.md)
-- [../phases/p3/moveit_validation_report.md](../phases/p3/moveit_validation_report.md)
-- [roadmap.md](roadmap.md)
-
-## 长期目标
-
-- 双臂能够实现协调运动。
-- 双臂能够在规划中考虑避障。
-- 后续接入视觉。
-- 最终完成简单抓取任务。
-
-## 当前阶段
-
-- 已完成：`P1 最小真实执行链`
-- 已完成：`P2 preflight 稳定化与工程化`
-- 已完成：`P3 恢复 SOP + MoveIt 主路径验证`
-- 进行中：`P4 双臂固定场景任务闭环`
+  - P3-C：USB-CAN 固定命名保持暂缓。
+- 当前项目处于 `P4 双臂固定场景任务闭环` 阶段。
+- 真机成果保留，但后续开发主线已切到 `Gazebo Harmonic / gz sim` 仿真。
+- 仿真后端已验证打通：
+  - `controller_manager`
+  - `joint_state_broadcaster`
+  - 左右臂 `FollowJointTrajectory`
+  - `/joint_states`
+  - `run_dual_arm_task --task dual_prep_sync`
 
 ## 当前正式可交付路径
 
-- 启动 `real_hardware.launch.py`
-- 通过 MoveIt 完成单臂规划并以 `bridge-final-point` 执行
-- P4 正式任务入口：`ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync`
+- 真机正式任务入口：`ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync`
+- 仿真正式入口：`ros2 launch dual_nero_bringup simulation.launch.py`
+- 仿真默认模式：server-only `gz sim`，优先保证控制器链和任务入口可用
 
 说明：
 
 - 当前原生 `ExecuteTrajectory` 不作为正式执行路径。
 - 当前 bridge 正式合同仍然是“每个 goal 恰好 1 个 trajectory point”。
+- 当前仿真继续复用 P1-P4 的任务入口、MoveIt group、controller 命名和 `FollowJointTrajectory` 合同。
 
 ## 已完成能力
 
@@ -49,67 +35,43 @@
 
 - 双臂只读
 - `/joint_states`
-- 双臂最小动作
 - 左右臂单点 action
 
 ### P2
 
-- 启动期映射/安全模式日志
-- action/topic 正式入口统一 preflight gate
-- 统一错误码与 reject/abort 语义
-- dual_arms topic 路径验证通过
+- preflight 正式接入 action / topic 入口
+- 统一错误码和 reject / abort 语义
 
-### P3-A
+### P3
 
-- 故障恢复 SOP 已形成正式文档
-- 现场常见故障已有统一恢复步骤
-
-### P3-B
-
-- 左臂 MoveIt 规划通过
-- 右臂 MoveIt 规划通过
-- 左臂 `bridge-final-point` 执行通过
-- 右臂 `bridge-final-point` 执行通过
-- 只读模式负例通过，错误码为 `ALLOW_MOTION_DISABLED`
-- `joint_limits.yaml` 已补保守的速度/加速度占位值，TOTG 默认警告已消失
+- 恢复 SOP 已形成正式文档
+- MoveIt 主路径已完成现场验证
 
 ### P4
 
-- 双臂固定场景任务入口 CLI 已落地
-- 任务配置已固化至 `p4_tasks.yaml`
-- 已支持正式入口直接回固定安全位
-- 已修正任务结果等待与 stop 清理的工程问题
-- 已新增仿真主线入口，保持任务层和执行合同层不变
+- 正式任务入口 CLI 已落地
+- `p4_tasks.yaml` 已固化
+- `--target safe` 已支持
+- 结果等待与 cleanup 的工程问题已修正
+- 仿真后端已验证可用，`dual_prep_sync` 的 prep / return 已在仿真中执行成功
 
 ## 当前阶段卡点
 
-当前卡点不是底层链路，而是现场任务空间与点位定义。
+当前卡点不再是仿真后端能否启动，而是：
 
-具体是：
-
-- 目标位在 MoveIt 与 bridge 合同层面可以表达
-- 但当前预备位/返回位与现场双臂实际摆放空间存在冲突
-- 继续盲试不会沉淀为正式任务，只会增加试错成本
-
-当前处理入口：
-
-- [../operations/hardware_alignment_checklist.md](../operations/hardware_alignment_checklist.md)
+- 启动日志里仍有 controller 重复配置噪声需要收口
+- P4 任务点位与空间建模仍未完成
+- 真机工位与模型对齐仍未完成
 
 ## 当前最高优先级
 
-1. 先完成 P4 的初始位/安全位/预备位建模
-2. 先在 gz sim 中恢复 P4 / P5 后续开发
+1. 固化 server-only 仿真主线，收口启动噪声
+2. 继续完成 P4 的初始位 / 安全位 / 预备位建模
 3. 等工位和模型对齐后，再回到真机执行 `dual_prep_sync` 正式验收
-
-## 总体路线入口
-
-- [roadmap.md](roadmap.md)
-- [architecture_layers.md](architecture_layers.md)
-- P4 阶段定义：[../phases/p4/README.md](../phases/p4/README.md)
 
 ## 当前风险
 
-- `can0/can1` 重插或重启后仍存在人工确认成本。
-- 速度/加速度限位尚未替换为厂家真实值。
-- 当前双臂目标点位还未与现场空间摆放完成对齐。
-- 双臂协调、避障、视觉、抓取仍未进入正式实现阶段。
+- Gazebo GUI 渲染链当前仍不稳定，默认只能保证 server-only 仿真后端
+- 速度 / 加速度限位尚未替换为厂家真实值
+- 当前双臂目标点位还未与现场空间摆放完成对齐
+- 双臂协调、避障、视觉、抓取仍未进入正式实现阶段

@@ -7,58 +7,41 @@
 - P3：主体已完成
 - 当前阶段：`P4 双臂固定场景任务闭环`
 
-## 最终目标
-
-- 双臂协调运动
-- 避障
-- 视觉接入
-- 简单抓取任务
-
 ## 最近已完成
 
-- P2 preflight 已接入 action/topic 正式入口
-- P3-A 恢复 SOP 已落地
-- P3-B MoveIt 主路径已现场验证通过
-- P4 双臂正式任务入口已落地：`run_dual_arm_task --task dual_prep_sync`
-- P4 已支持通过正式入口直接回固定安全位：`--target safe`
-- P4 已修正结果等待与 stop cleanup 的工程问题
-- 仿真主线已切到 `Gazebo Harmonic / gz sim` 方向
+- P4 正式任务入口已落地：`run_dual_arm_task --task dual_prep_sync`
+- 已支持 `--target safe` 直接回固定安全位
+- 已修正结果等待与 cleanup 的主要工程问题
+- 仿真主线已切到 `Gazebo Harmonic / gz sim`
+- 仿真后端已验证打通：
+  - `controller_manager`
+  - `/joint_states`
+  - 左右臂 `FollowJointTrajectory`
+  - `run_dual_arm_task --task dual_prep_sync`
 
 ## 当前正式路径
 
-- bridge 架构继续保留
-- 不切到 native `ros2_control`
-- MoveIt 正式执行路径：规划 -> 取末点 -> 单点 `FollowJointTrajectory` 走 bridge
-- P4 正式任务入口：双臂 `dual_arms` 规划 -> 分裂左右臂单点 goal -> 任务级同步下发
+- 正式执行架构仍保持 bridge 合同，不切到另一套上层入口
+- 仿真默认使用 server-only `gz sim`
+- 当前仿真默认由 `gz_ros2_control / controller_manager` 自动加载 controller
 
 ## 当前问题判断
 
-当前主开发环境切到仿真层。真机成果保留，但当前 P4 的主要问题仍是现场任务空间与点位定义。
+当前主开发环境已切到仿真层。真机成果保留，但当前主要问题不再是仿真能否跑起来，而是：
 
-具体表现：
-
-- CLI、MoveIt、bridge、preflight 都已经接上
-- 当前预备位/返回位与现场双臂摆放空间存在冲突
-- 继续盲试不会形成正式任务定义
+- 启动日志里 controller 重复配置噪声需要收口
+- P4 点位与空间建模尚未完成
+- 真机工位与模型对齐尚未完成
 
 ## 当前优先级
 
-1. 在 gz sim 中恢复 P4 后续开发
+1. 固化 server-only 仿真可用主线，去掉重复 controller spawner 噪声
 2. 继续做 P4 点位与空间建模
 3. 等工位和模型对齐后，再恢复真机任务验收
 
-## 当前不做
-
-- 不做 P3-C 的固定命名实现
-- 不切架构
-- 不在空间关系未定义清楚前继续扩大动作试错
-
 ## 当前应优先参考
 
-- Human 状态入口：[../human/overview/project_status.md](../human/overview/project_status.md)
-- Human 任务入口：[../human/overview/next_actions.md](../human/overview/next_actions.md)
-- Human 分层入口：[../human/overview/architecture_layers.md](../human/overview/architecture_layers.md)
-- P4 阶段定义入口：[../human/phases/p4/README.md](../human/phases/p4/README.md)
-- 工位对齐清单入口：[../human/operations/hardware_alignment_checklist.md](../human/operations/hardware_alignment_checklist.md)
-- 仿真运行手册入口：[../human/operations/simulation_runbook.md](../human/operations/simulation_runbook.md)
-- P3 恢复 SOP 入口：[../human/phases/p3/recovery_sop.md](../human/phases/p3/recovery_sop.md)
+- [../human/overview/project_status.md](../human/overview/project_status.md)
+- [../human/overview/next_actions.md](../human/overview/next_actions.md)
+- [../human/operations/simulation_runbook.md](../human/operations/simulation_runbook.md)
+- [../human/phases/p4/README.md](../human/phases/p4/README.md)
