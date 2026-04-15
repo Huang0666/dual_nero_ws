@@ -17,7 +17,7 @@
 - 当前阶段口径：
   - `P4-A` 已完成
   - `P4-B` 延期
-  - `P5-Sim` 可启动
+  - `P5-Sim` 规划启动，可进入实现
 
 ## 当前暂停点
 
@@ -26,7 +26,8 @@
 
 ## 下一步
 
-- 先继续 P5-Sim
+- 先按 `docs/human/phases/p5/README.md` 进入 P5-Sim
+- 同时把 P6 进入条件固定在 `docs/human/phases/p6/README.md`
 - 再等工位与模型对齐恢复 P4-B 真机工作
 - 最后回到真机做闭环验收
 

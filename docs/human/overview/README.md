@@ -9,6 +9,7 @@
 - [project_status.md](project_status.md)：当前阶段、正式能力、交付边界、风险
 - [next_actions.md](next_actions.md)：当前阶段的下一步任务
 - [architecture_layers.md](architecture_layers.md)：P4 / P5 / MoveIt / 仿真 / 真机的边界图与分层说明
+- [phase_delivery_map.svg](phase_delivery_map.svg)：P4-A / P4-B / P5-Sim / P5-Real / P6 的阶段路线图
 - [roadmap.md](roadmap.md)：长期路线
 - [project_baseline.md](project_baseline.md)：架构基线和命名合同
 

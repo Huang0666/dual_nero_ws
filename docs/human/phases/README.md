@@ -10,11 +10,15 @@
 - [p2/README.md](p2/README.md)
 - [p3/README.md](p3/README.md)
 - [p4/README.md](p4/README.md)
+- [p5/README.md](p5/README.md)
+- [p6/README.md](p6/README.md)
 
 ## 当前推荐阶段入口
 
 - P4 阶段定义：[p4/README.md](p4/README.md)
 - P4 完成清单：[p4/completion_checklist.md](p4/completion_checklist.md)
+- P5 阶段定义：[p5/README.md](p5/README.md)
+- P6 阶段定义：[p6/README.md](p6/README.md)
 
 ## 规则
 

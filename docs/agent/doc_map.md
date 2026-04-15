@@ -59,3 +59,5 @@
 - 任务：[../human/overview/next_actions.md](../human/overview/next_actions.md)
 - 仿真：[../human/operations/simulation_runbook.md](../human/operations/simulation_runbook.md)
 - P4：[../human/phases/p4/README.md](../human/phases/p4/README.md)
+- P5：[../human/phases/p5/README.md](../human/phases/p5/README.md)
+- P6：[../human/phases/p6/README.md](../human/phases/p6/README.md)

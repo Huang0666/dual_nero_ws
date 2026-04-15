@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120">
+  <defs>
+    <style>
+      .title { font: 700 34px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #14213d; }
+      .subtitle { font: 500 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #4a5568; }
+      .section { font: 700 22px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #14213d; }
+      .label { font: 700 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #132238; }
+      .body { font: 500 15px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #22324a; }
+      .small { font: 500 13px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #4a5568; }
+      .statusDone { font: 700 14px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #146c43; }
+      .statusProg { font: 700 14px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #8a5300; }
+      .statusWait { font: 700 14px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #7a1f1f; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#66788a"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1120" fill="#f4f7fb"/>
+  <rect x="36" y="28" width="1528" height="1054" rx="28" fill="#ffffff" stroke="#d6dde8" stroke-width="2"/>
+
+  <text x="70" y="86" class="title">dual_nero_ws 阶段路线图</text>
+  <text x="70" y="118" class="subtitle">目标：把当前所处阶段、下一步实施顺序、P5/P6 与后续阶段的依赖关系说清楚，避免一边做实现一边改阶段口径。</text>
+
+  <rect x="70" y="150" width="1460" height="74" rx="18" fill="#eef6ff" stroke="#b8d5ff"/>
+  <text x="100" y="182" class="label">当前阶段判断</text>
+  <text x="100" y="208" class="body">P4-A 仿真执行链已完成；P4-B 真机固定场景闭环延期；当前可以直接启动 P5-Sim，但 P5-Real / P6-Real 的最终安全结论仍依赖真实工位。</text>
+
+  <text x="70" y="270" class="section">阶段主线</text>
+
+  <rect x="70" y="296" width="310" height="176" rx="22" fill="#e9f9ef" stroke="#9fd7b4" stroke-width="2"/>
+  <text x="94" y="328" class="label">P4-A 仿真执行链</text>
+  <text x="94" y="354" class="statusDone">状态：已完成</text>
+  <text x="94" y="382" class="body">- simulation.launch.py 可稳定启动</text>
+  <text x="94" y="406" class="body">- controller_manager / joint_states 可用</text>
+  <text x="94" y="430" class="body">- dual_prep_sync 已跑通 prep / return</text>
+  <text x="94" y="456" class="small">作用：给 P5-Sim 提供稳定 backend，不再重复处理仿真启动链。</text>
+
+  <rect x="430" y="296" width="310" height="176" rx="22" fill="#fff5df" stroke="#e1c06f" stroke-width="2"/>
+  <text x="454" y="328" class="label">P4-B 真机固定场景闭环</text>
+  <text x="454" y="354" class="statusWait">状态：延期</text>
+  <text x="454" y="382" class="body">- 工位与模型对齐</text>
+  <text x="454" y="406" class="body">- 初始位 / 安全位 / 预备位 / 任务位固定</text>
+  <text x="454" y="430" class="body">- 真机 dual_prep_sync 闭环验收</text>
+  <text x="454" y="456" class="small">依赖：现场工位恢复、真实模型对齐、一组可重复任务点位。</text>
+
+  <rect x="790" y="296" width="310" height="176" rx="22" fill="#fff8df" stroke="#e7cb73" stroke-width="2"/>
+  <text x="814" y="328" class="label">P5-Sim 双臂协同阶段</text>
+  <text x="814" y="354" class="statusProg">状态：现在启动</text>
+  <text x="814" y="382" class="body">- 静态障碍物 / Planning Scene</text>
+  <text x="814" y="406" class="body">- 多 stage task schema</text>
+  <text x="814" y="430" class="body">- sync / serial 执行语义</text>
+  <text x="814" y="456" class="small">目标：在不改合同的前提下，把双臂协同能力先在仿真里做出来。</text>
+
+  <rect x="1150" y="296" width="380" height="176" rx="22" fill="#f4efff" stroke="#b9a4e1" stroke-width="2"/>
+  <text x="1174" y="328" class="label">P5-Real 真机协同验收</text>
+  <text x="1174" y="354" class="statusWait">状态：后置</text>
+  <text x="1174" y="382" class="body">- 将 P5-Sim 的任务系统切回真机 backend</text>
+  <text x="1174" y="406" class="body">- 验证真实工位障碍物和双臂安全边界</text>
+  <text x="1174" y="430" class="body">- 得出真实环境下的协同 / 避障结论</text>
+  <text x="1174" y="456" class="small">依赖：P4-B 恢复，且 P5-Sim 已形成稳定最小样例。</text>
+
+  <line x1="380" y1="384" x2="430" y2="384" stroke="#66788a" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="740" y1="384" x2="790" y2="384" stroke="#66788a" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="1100" y1="384" x2="1150" y2="384" stroke="#66788a" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <text x="70" y="548" class="section">P5-Sim 实施拆解</text>
+
+  <rect x="70" y="574" width="220" height="160" rx="20" fill="#eefcf3" stroke="#9fd3b3"/>
+  <text x="92" y="606" class="label">Step 1 任务框架</text>
+  <text x="92" y="632" class="body">- p5 task schema</text>
+  <text x="92" y="656" class="body">- stage flow</text>
+  <text x="92" y="680" class="body">- fail policy</text>
+  <text x="92" y="706" class="small">文件核心：dual_arm_task_cli.py</text>
+
+  <rect x="320" y="574" width="220" height="160" rx="20" fill="#eefcf3" stroke="#9fd3b3"/>
+  <text x="342" y="606" class="label">Step 2 环境 Profile</text>
+  <text x="342" y="632" class="body">- p5_scene_sim.yaml</text>
+  <text x="342" y="656" class="body">- p5_scene_real.yaml</text>
+  <text x="342" y="680" class="body">- safety / preflight profile</text>
+  <text x="342" y="706" class="small">共用代码，不同配置。</text>
+
+  <rect x="570" y="574" width="220" height="160" rx="20" fill="#eefcf3" stroke="#9fd3b3"/>
+  <text x="592" y="606" class="label">Step 3 场景接入</text>
+  <text x="592" y="632" class="body">- Planning Scene helper</text>
+  <text x="592" y="656" class="body">- CollisionObject 注入</text>
+  <text x="592" y="680" class="body">- scene profile 切换</text>
+  <text x="592" y="706" class="small">先做静态场景，不碰视觉。</text>
+
+  <rect x="820" y="574" width="220" height="160" rx="20" fill="#eefcf3" stroke="#9fd3b3"/>
+  <text x="842" y="606" class="label">Step 4 协同语义</text>
+  <text x="842" y="632" class="body">- sync</text>
+  <text x="842" y="656" class="body">- serial_left_first</text>
+  <text x="842" y="680" class="body">- serial_right_first</text>
+  <text x="842" y="706" class="small">不先引入复杂调度器。</text>
+
+  <rect x="1070" y="574" width="220" height="160" rx="20" fill="#eefcf3" stroke="#9fd3b3"/>
+  <text x="1092" y="606" class="label">Step 5 最小样例</text>
+  <text x="1092" y="632" class="body">- 1 个双臂协同 task</text>
+  <text x="1092" y="656" class="body">- 受静态障碍物影响</text>
+  <text x="1092" y="680" class="body">- 可重复跑通</text>
+  <text x="1092" y="706" class="small">这是 P5-Sim 的第一验收样例。</text>
+
+  <rect x="1320" y="574" width="210" height="160" rx="20" fill="#fff7ef" stroke="#e3bc89"/>
+  <text x="1342" y="606" class="label">暂不做</text>
+  <text x="1342" y="632" class="body">- MTC / BT 大框架</text>
+  <text x="1342" y="656" class="body">- 动态障碍物</text>
+  <text x="1342" y="680" class="body">- 视觉输入</text>
+  <text x="1342" y="706" class="small">先做最小闭环，不提前扩散。</text>
+
+  <line x1="290" y1="654" x2="320" y2="654" stroke="#66788a" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="540" y1="654" x2="570" y2="654" stroke="#66788a" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="790" y1="654" x2="820" y2="654" stroke="#66788a" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="1040" y1="654" x2="1070" y2="654" stroke="#66788a" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <text x="70" y="790" class="section">P6 与后续阶段</text>
+
+  <rect x="70" y="816" width="470" height="190" rx="22" fill="#eef6ff" stroke="#b8d5ff"/>
+  <text x="96" y="848" class="label">P6 视觉接入与简单抓取</text>
+  <text x="96" y="876" class="body">前置依赖：</text>
+  <text x="96" y="900" class="body">- P5-Sim 至少形成一个稳定协同样例</text>
+  <text x="96" y="924" class="body">- P5-Real 至少澄清真实工位协同边界</text>
+  <text x="96" y="948" class="body">- 视觉坐标系 / 相机标定 / 目标获取方式确定</text>
+  <text x="96" y="980" class="small">P6 关注“感知接入后仍能形成任务闭环”，不是直接追复杂操作。</text>
+
+  <rect x="580" y="816" width="470" height="190" rx="22" fill="#f3efff" stroke="#c3b2e7"/>
+  <text x="606" y="848" class="label">P7 复杂场景与抓取扩展</text>
+  <text x="606" y="876" class="body">候选方向：</text>
+  <text x="606" y="900" class="body">- 更复杂障碍物场景</text>
+  <text x="606" y="924" class="body">- 更复杂抓取 / 操作流程</text>
+  <text x="606" y="948" class="body">- 多目标 / 多步骤任务链</text>
+  <text x="606" y="980" class="small">只有在 P6 闭环稳定后才进入，不提前展开。</text>
+
+  <rect x="1090" y="816" width="440" height="190" rx="22" fill="#fff3f3" stroke="#efb7b7"/>
+  <text x="1116" y="848" class="label">始终保持的系统约束</text>
+  <text x="1116" y="876" class="body">- 不造第二套任务入口</text>
+  <text x="1116" y="900" class="body">- 不改 joint / group / controller 合同</text>
+  <text x="1116" y="924" class="body">- 共用 task engine，只区分 profile 与 backend</text>
+  <text x="1116" y="948" class="body">- 真机安全结论不能只靠仿真替代</text>
+  <text x="1116" y="980" class="small">这是后续所有阶段都不能越过的边界。</text>
+</svg>
