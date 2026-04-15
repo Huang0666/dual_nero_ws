@@ -5,6 +5,7 @@
         params="name initial_positions_file hardware_plugin:='mock_components/GenericSystem' use_gz_sim:='false' controllers_file:=''"
     >
         <xacro:property name="initial_positions" value="${xacro.load_yaml(initial_positions_file)['initial_positions']}"/>
+        <xacro:property name="gz_sim_enabled" value="${str(use_gz_sim).lower() == 'true'}"/>
 
         <ros2_control name="${name}" type="system">
             <hardware>
@@ -111,7 +112,7 @@
 
         </ros2_control>
 
-        <xacro:if value="${use_gz_sim == 'true'}">
+        <xacro:if value="${gz_sim_enabled}">
             <gazebo>
                 <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
                     <parameters>${controllers_file}</parameters>
