@@ -3,6 +3,7 @@ simulation:
   with_moveit: true
   with_rviz: true
   with_gz_gui: false
+  spawn_sim_controllers: false
   use_sim_time: true
   world_file: ""
   robot_name: dual_nero

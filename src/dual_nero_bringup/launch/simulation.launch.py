@@ -24,6 +24,7 @@ def _startup_logs(context, *_args, **_kwargs):
     with_moveit = LaunchConfiguration("with_moveit").perform(context)
     with_rviz = LaunchConfiguration("with_rviz").perform(context)
     with_gz_gui = LaunchConfiguration("with_gz_gui").perform(context)
+    spawn_sim_controllers = LaunchConfiguration("spawn_sim_controllers").perform(context)
     use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
     gz_resource_path = EnvironmentVariable("GZ_SIM_RESOURCE_PATH", default_value="").perform(context)
     return [
@@ -32,11 +33,60 @@ def _startup_logs(context, *_args, **_kwargs):
         LogInfo(msg=f"[sim] with_moveit -> {with_moveit}"),
         LogInfo(msg=f"[sim] with_rviz -> {with_rviz}"),
         LogInfo(msg=f"[sim] with_gz_gui -> {with_gz_gui}"),
+        LogInfo(msg=f"[sim] spawn_sim_controllers -> {spawn_sim_controllers}"),
         LogInfo(msg=f"[sim] use_sim_time -> {use_sim_time}"),
         LogInfo(msg=f"[sim] GZ_SIM_RESOURCE_PATH -> {gz_resource_path}"),
         LogInfo(
             msg="[sim] contract -> task entry, MoveIt groups, controller names, "
             "and FollowJointTrajectory remain aligned with P1-P4."
+        ),
+    ]
+
+
+def _controller_spawner_nodes():
+    return [
+        Node(
+            package="controller_manager",
+            executable="spawner",
+            arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+            output="screen",
+        ),
+        Node(
+            package="controller_manager",
+            executable="spawner",
+            arguments=["left_arm_controller", "--controller-manager", "/controller_manager"],
+            output="screen",
+        ),
+        Node(
+            package="controller_manager",
+            executable="spawner",
+            arguments=["right_arm_controller", "--controller-manager", "/controller_manager"],
+            output="screen",
+        ),
+    ]
+
+
+def _maybe_spawn_controllers(context, spawn_robot, *_args, **_kwargs):
+    if LaunchConfiguration("spawn_sim_controllers").perform(context).lower() != "true":
+        return [
+            LogInfo(
+                msg="[sim] controller spawning -> disabled; "
+                "expect gz_ros2_control/controller_manager to load and activate controllers."
+            )
+        ]
+
+    return [
+        LogInfo(msg="[sim] controller spawning -> enabled fallback path via controller_manager spawners."),
+        RegisterEventHandler(
+            OnProcessExit(
+                target_action=spawn_robot,
+                on_exit=[
+                    TimerAction(
+                        period=3.0,
+                        actions=_controller_spawner_nodes(),
+                    )
+                ],
+            )
         ),
     ]
 
@@ -134,41 +184,6 @@ def generate_launch_description():
         arguments=["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"],
     )
 
-    joint_state_broadcaster = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-        output="screen",
-    )
-    left_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["left_arm_controller", "--controller-manager", "/controller_manager"],
-        output="screen",
-    )
-    right_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["right_arm_controller", "--controller-manager", "/controller_manager"],
-        output="screen",
-    )
-
-    spawn_controllers = RegisterEventHandler(
-        OnProcessExit(
-            target_action=spawn_robot,
-            on_exit=[
-                TimerAction(
-                    period=3.0,
-                    actions=[
-                        joint_state_broadcaster,
-                        left_controller,
-                        right_controller,
-                    ],
-                )
-            ],
-        )
-    )
-
     return LaunchDescription(
         [
             DeclareLaunchArgument(
@@ -211,6 +226,11 @@ def generate_launch_description():
                 default_value=str(defaults.get("with_gz_gui", False)).lower(),
                 description="Whether to start Gazebo GUI. Default false to avoid Ogre2 GUI crashes on current assets.",
             ),
+            DeclareLaunchArgument(
+                "spawn_sim_controllers",
+                default_value=str(defaults.get("spawn_sim_controllers", False)).lower(),
+                description="Whether to manually spawn sim controllers after model creation. Default false because gz_ros2_control already activates them in the current sim path.",
+            ),
             SetEnvironmentVariable(
                 name="GZ_SIM_RESOURCE_PATH",
                 value=[
@@ -227,7 +247,7 @@ def generate_launch_description():
             clock_bridge,
             robot_state_publisher,
             spawn_robot,
-            spawn_controllers,
+            OpaqueFunction(function=_maybe_spawn_controllers, args=[spawn_robot]),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(move_group_launch),
                 condition=IfCondition(LaunchConfiguration("with_moveit")),
