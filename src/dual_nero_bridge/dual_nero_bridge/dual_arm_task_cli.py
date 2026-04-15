@@ -961,7 +961,10 @@ def main(argv: list[str] | None = None) -> int:
         preview = node.build_preview()
         print(preview.to_pretty_json())
 
-        selected_stages = _resolve_requested_stages(task_definition, args.target)
+        selected_stages = _resolve_requested_stages(
+            task_definition=task_definition,
+            target=args.target,
+        )
         completed_stages: list[str] = []
         safe_return_status = "not_requested"
         for stage in selected_stages:
