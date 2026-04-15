@@ -5,8 +5,8 @@
     <xacro:arg name="use_gz_sim" default="false" />
     <xacro:arg name="controllers_file" default="" />
     <xacro:arg name="use_sim_visuals" default="$(arg use_gz_sim)" />
-    <xacro:arg name="sim_system_plugin_filename" default="libign_ros2_control-system.so" />
-    <xacro:arg name="sim_system_plugin_name" default="ign_ros2_control::IgnitionROS2ControlPlugin" />
+    <xacro:arg name="sim_system_plugin_filename" default="libgz_ros2_control-system.so" />
+    <xacro:arg name="sim_system_plugin_name" default="gz_ros2_control::GazeboSimROS2ControlPlugin" />
 
     <!-- Import dual_nero_description urdf file -->
     <xacro:property name="use_sim_visuals" value="$(arg use_sim_visuals)" />

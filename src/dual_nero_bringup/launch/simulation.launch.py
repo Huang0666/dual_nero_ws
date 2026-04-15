@@ -28,6 +28,7 @@ def _startup_logs(context, *_args, **_kwargs):
     sim_control_hardware_plugin = LaunchConfiguration("sim_control_hardware_plugin").perform(context)
     sim_control_system_plugin = LaunchConfiguration("sim_control_system_plugin").perform(context)
     sim_control_system_plugin_name = LaunchConfiguration("sim_control_system_plugin_name").perform(context)
+    sim_control_system_plugin_path = LaunchConfiguration("sim_control_system_plugin_path").perform(context)
     use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
     gz_resource_path = EnvironmentVariable("GZ_SIM_RESOURCE_PATH", default_value="").perform(context)
     ign_system_plugin_path = EnvironmentVariable("IGN_GAZEBO_SYSTEM_PLUGIN_PATH", default_value="").perform(context)
@@ -41,6 +42,7 @@ def _startup_logs(context, *_args, **_kwargs):
         LogInfo(msg=f"[sim] sim_control_hardware_plugin -> {sim_control_hardware_plugin}"),
         LogInfo(msg=f"[sim] sim_control_system_plugin -> {sim_control_system_plugin}"),
         LogInfo(msg=f"[sim] sim_control_system_plugin_name -> {sim_control_system_plugin_name}"),
+        LogInfo(msg=f"[sim] sim_control_system_plugin_path -> {sim_control_system_plugin_path}"),
         LogInfo(msg=f"[sim] use_sim_time -> {use_sim_time}"),
         LogInfo(msg=f"[sim] GZ_SIM_RESOURCE_PATH -> {gz_resource_path}"),
         LogInfo(msg=f"[sim] IGN_GAZEBO_SYSTEM_PLUGIN_PATH -> {ign_system_plugin_path}"),
@@ -79,7 +81,7 @@ def _maybe_spawn_controllers(context, spawn_robot, *_args, **_kwargs):
         return [
             LogInfo(
                 msg="[sim] controller spawning -> disabled; "
-                "expect ign_ros2_control/controller_manager to load and activate controllers."
+                "expect the Gazebo ros2_control plugin/controller_manager to load and activate controllers."
             )
         ]
 
@@ -104,10 +106,8 @@ def generate_launch_description():
     description_pkg = FindPackageShare("dual_nero_description")
     moveit_pkg = FindPackageShare("dual_nero_moveit_config")
     bringup_pkg = FindPackageShare("dual_nero_bringup")
-    ign_control_pkg = FindPackageShare("ign_ros2_control")
     description_model_root = PathJoinSubstitution([description_pkg, ".."])
     bringup_model_root = PathJoinSubstitution([bringup_pkg, ".."])
-    ign_control_lib_path = PathJoinSubstitution([ign_control_pkg, "..", "..", "lib"])
 
     default_world = PathJoinSubstitution([bringup_pkg, "worlds", "dual_nero_empty.sdf"])
     controllers_file = PathJoinSubstitution([moveit_pkg, "config", "ros2_controllers.yaml"])
@@ -260,8 +260,13 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "sim_control_system_plugin_name",
-                default_value=str(defaults.get("sim_control_system_plugin_name", "ign_ros2_control::IgnitionROS2ControlPlugin")),
+                default_value=str(defaults.get("sim_control_system_plugin_name", "gz_ros2_control::GazeboSimROS2ControlPlugin")),
                 description="Gazebo system plugin class name used to host ros2_control in ign gazebo.",
+            ),
+            DeclareLaunchArgument(
+                "sim_control_system_plugin_path",
+                default_value=str(defaults.get("sim_control_system_plugin_path", "/opt/ros/humble/lib")),
+                description="Directory added to Gazebo system plugin search path.",
             ),
             SetEnvironmentVariable(
                 name="GZ_SIM_RESOURCE_PATH",
@@ -276,7 +281,7 @@ def generate_launch_description():
             SetEnvironmentVariable(
                 name="IGN_GAZEBO_SYSTEM_PLUGIN_PATH",
                 value=[
-                    ign_control_lib_path,
+                    LaunchConfiguration("sim_control_system_plugin_path"),
                     ":",
                     EnvironmentVariable("IGN_GAZEBO_SYSTEM_PLUGIN_PATH", default_value=""),
                 ],
@@ -284,7 +289,7 @@ def generate_launch_description():
             SetEnvironmentVariable(
                 name="GZ_SIM_SYSTEM_PLUGIN_PATH",
                 value=[
-                    ign_control_lib_path,
+                    LaunchConfiguration("sim_control_system_plugin_path"),
                     ":",
                     EnvironmentVariable("GZ_SIM_SYSTEM_PLUGIN_PATH", default_value=""),
                 ],
