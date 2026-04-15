@@ -21,6 +21,7 @@
 
 - 当前状态：[human/overview/project_status.md](human/overview/project_status.md)
 - 下一步：[human/overview/next_actions.md](human/overview/next_actions.md)
+- 架构边界：[human/overview/architecture_layers.md](human/overview/architecture_layers.md)
 - 仿真手册：[human/operations/simulation_runbook.md](human/operations/simulation_runbook.md)
 - 工位对齐：[human/operations/hardware_alignment_checklist.md](human/operations/hardware_alignment_checklist.md)
 - P4 定义：[human/phases/p4/README.md](human/phases/p4/README.md)

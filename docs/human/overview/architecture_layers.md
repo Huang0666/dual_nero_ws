@@ -2,65 +2,74 @@
 
 ## 作用
 
-说明当前项目哪些层必须在真机与仿真之间保持一致，哪些层允许分叉。
+说明当前项目哪些层必须在真机与仿真之间保持一致，哪些层允许分叉；同时明确 P4、P5 和 MoveIt 的边界。
 
-## 当前分层
+## 边界图
 
-### 1. 任务层
+![dual_nero_ws 边界图](dual_nero_boundary_map.svg)
 
-- `run_dual_arm_task`
-- 后续 P5 任务入口
-- 任务 YAML 结构
+图文件已保存到仓库，可直接在 GitHub 中查看：
 
-要求：
+- [dual_nero_boundary_map.svg](dual_nero_boundary_map.svg)
 
-- 真机与仿真必须保持一致
+## 读图要点
 
-### 2. 规划层
+### 1. MoveIt 不是最底层
 
-- MoveIt
-- `left_arm`
-- `right_arm`
-- `dual_arms`
+MoveIt 位于“规划中间层”，上面是任务 / 编排层，下面是执行合同层和 runtime backend。
 
-要求：
+它负责：
 
-- 真机与仿真必须保持一致
+- 运动学
+- 路径规划
+- 碰撞检测
+- Planning Scene
+- 约束处理
 
-### 3. 执行合同层
+它不负责：
 
-- `FollowJointTrajectory`
-- `left_arm_controller`
-- `right_arm_controller`
-- joint/controller 命名合同
+- 任务语义定义
+- 双臂同步规则
+- 失败恢复策略
+- 现场工位真实性
 
-要求：
+### 2. P5 不是重写 MoveIt
 
-- 真机与仿真必须保持一致
+P5 的工作是在现有 MoveIt 基础上继续做：
 
-### 4. 规则层
+- 双臂协同规则
+- 场景 / 障碍物建模
+- 约束与避障
+- 多阶段任务设计
+- 失败后的任务级恢复
 
-- preflight
-- 任务前检查
-- 目标结构校验
+所以，P5 是“在 MoveIt 之上增强任务级能力”，不是再造一套规划器。
 
-要求：
+### 3. 真机与仿真的分叉点
 
-- 通用规则尽量复用
-- 纯真机项允许在仿真中做等价策略或豁免
-
-### 5. backend 层
+当前只允许在 runtime backend 分叉：
 
 - 真机：`bridge -> driver -> pyAgxArm -> hardware`
-- 仿真：`gz sim -> ros2_control sim hardware -> joint_trajectory_controller`
+- 仿真：`gz sim -> gz_ros2_control -> controller_manager -> joint_trajectory_controller`
 
-要求：
+上层必须保持一致：
 
-- 这是唯一允许明确分叉的层
+- 任务入口
+- MoveIt group
+- controller 命名
+- `FollowJointTrajectory`
+- `/joint_states`
+
+## 当前阶段口径
+
+- `P4-A 仿真执行链`：已完成
+- `P4-B 真机固定场景闭环`：延期，等待工位与模型对齐
+- `P5-Sim`：可以启动
+- `P5-Real`：最终结论仍依赖真实工位
 
 ## 当前冻结原则
 
 - 不允许为了仿真新造第二套任务入口
-- 不允许为了仿真改动 joint/group/controller 命名合同
+- 不允许为了仿真改动 joint / group / controller 命名合同
 - 不允许把当前 P1-P4 的任务层成果丢掉重来
 - 允许只替换最底层执行 backend

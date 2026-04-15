@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120">
+  <defs>
+    <style>
+      .title { font: 700 34px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #14213d; }
+      .subtitle { font: 500 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #4a5568; }
+      .layer { font: 700 20px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #14213d; }
+      .body { font: 500 15px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #22324a; }
+      .small { font: 500 13px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #4a5568; }
+      .label { font: 700 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #0b1320; }
+      .calloutTitle { font: 700 17px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #7a1f1f; }
+      .calloutBody { font: 500 14px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #5a2d2d; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5c6f82"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1120" fill="#f4f7fb"/>
+  <rect x="36" y="28" width="1528" height="1054" rx="28" fill="#ffffff" stroke="#d6dde8" stroke-width="2"/>
+
+  <text x="70" y="86" class="title">dual_nero_ws 边界图</text>
+  <text x="70" y="118" class="subtitle">目标：说明 P4 / P5、MoveIt、仿真 backend、真机 backend 各自位于哪一层，以及哪些层必须保持同构。</text>
+
+  <rect x="70" y="146" width="1460" height="72" rx="18" fill="#eef6ff" stroke="#b8d5ff"/>
+  <text x="100" y="176" class="label">一句话结论</text>
+  <text x="100" y="204" class="body">MoveIt 不是最底层，它是“规划中间层”。P5 不是重写 MoveIt，而是在 MoveIt 之上继续做双臂协同、约束、避障、场景和任务级语义。</text>
+
+  <rect x="70" y="250" width="230" height="118" rx="18" fill="#fff5d9" stroke="#e8c75d"/>
+  <text x="92" y="282" class="layer">Layer 1 任务 / 编排层</text>
+  <text x="92" y="308" class="body">- run_dual_arm_task</text>
+  <text x="92" y="332" class="body">- 任务 YAML / CLI</text>
+  <text x="92" y="356" class="body">- 成功 / 失败 / 回退语义</text>
+
+  <rect x="330" y="250" width="1200" height="118" rx="18" fill="#fffaf0" stroke="#efc98e"/>
+  <text x="356" y="282" class="label">职责</text>
+  <text x="356" y="308" class="body">定义“任务要做什么”：比如 dual_prep_sync、后续 P5 协同任务入口、阶段切换、同步 / 串行执行策略。</text>
+  <text x="356" y="332" class="body">P4 主要在这里建立固定任务闭环；P5 会继续在这里增强双臂协同语义、恢复策略和任务级约束。</text>
+  <text x="356" y="356" class="small">这层在仿真与真机之间必须保持一致，不允许为仿真新造第二套入口。</text>
+
+  <rect x="70" y="394" width="230" height="126" rx="18" fill="#dff4ea" stroke="#86c8a5"/>
+  <text x="92" y="426" class="layer">Layer 2 规划层</text>
+  <text x="92" y="452" class="body">- MoveIt</text>
+  <text x="92" y="476" class="body">- left_arm / right_arm / dual_arms</text>
+  <text x="92" y="500" class="body">- Planning Scene / 约束 / 碰撞</text>
+
+  <rect x="330" y="394" width="1200" height="126" rx="18" fill="#eefcf3" stroke="#9fd3b3"/>
+  <text x="356" y="426" class="label">职责</text>
+  <text x="356" y="452" class="body">负责“怎么规划”：运动学、路径搜索、碰撞检测、场景约束、规划结果生成。</text>
+  <text x="356" y="476" class="body">P5 的主要开发不是重写这一层，而是在它已有能力上增加：双臂协同规则、障碍物场景、姿态 / 路径约束、阶段化动作设计。</text>
+  <text x="356" y="500" class="small">这层在仿真与真机之间应尽量保持一致。差异主要来自场景真实性，而不是接口层变化。</text>
+
+  <rect x="70" y="546" width="230" height="118" rx="18" fill="#e8f0ff" stroke="#9fb8ea"/>
+  <text x="92" y="578" class="layer">Layer 3 执行合同层</text>
+  <text x="92" y="604" class="body">- FollowJointTrajectory</text>
+  <text x="92" y="628" class="body">- left/right_arm_controller</text>
+  <text x="92" y="652" class="body">- /joint_states</text>
+
+  <rect x="330" y="546" width="1200" height="118" rx="18" fill="#f2f6ff" stroke="#b8c8ef"/>
+  <text x="356" y="578" class="label">职责</text>
+  <text x="356" y="604" class="body">负责“如何把规划结果交给执行端”：action 名、controller 名、joint 命名、joint_states 回读。</text>
+  <text x="356" y="628" class="body">这一层是仿真和真机共同冻结的边界。P1-P5 都应该继续复用，不应因换 backend 改名。</text>
+  <text x="356" y="652" class="small">你这次仿真打通的关键，就是把这一层在 gz sim 里保持成与真机一致。</text>
+
+  <rect x="70" y="690" width="230" height="226" rx="18" fill="#f6eaff" stroke="#c9a4e3"/>
+  <text x="92" y="722" class="layer">Layer 4 Runtime Backend</text>
+  <text x="92" y="748" class="body">唯一允许明确分叉的层</text>
+  <text x="92" y="784" class="body">左侧：仿真 backend</text>
+  <text x="92" y="808" class="body">右侧：真机 backend</text>
+  <text x="92" y="844" class="small">上层接口不变</text>
+
+  <rect x="330" y="690" width="570" height="226" rx="22" fill="#f4f0ff" stroke="#bfa4e0" stroke-width="2"/>
+  <text x="356" y="724" class="label">仿真 backend（当前主线）</text>
+  <text x="356" y="754" class="body">- ign / gz sim（默认 server-only）</text>
+  <text x="356" y="780" class="body">- gz_ros2_control</text>
+  <text x="356" y="806" class="body">- controller_manager</text>
+  <text x="356" y="832" class="body">- joint_trajectory_controller</text>
+  <text x="356" y="858" class="body">- robot_description + world / obstacles</text>
+  <text x="356" y="892" class="small">当前已验证：controller active、joint_states 可读、dual_prep_sync 可执行。</text>
+
+  <rect x="960" y="690" width="570" height="226" rx="22" fill="#fff1f1" stroke="#e0b0b0" stroke-width="2"/>
+  <text x="986" y="724" class="label">真机 backend（当前验收层）</text>
+  <text x="986" y="754" class="body">- dual_nero_bridge</text>
+  <text x="986" y="780" class="body">- dual_nero_driver</text>
+  <text x="986" y="806" class="body">- pyAgxArm / 厂家 runtime</text>
+  <text x="986" y="832" class="body">- CAN / 电机 / 双臂本体</text>
+  <text x="986" y="858" class="body">- 真实工位 / 线缆 / 支架 / 风险边界</text>
+  <text x="986" y="892" class="small">当前延期部分：工位与模型对齐、固定点位、真机 P4 闭环验收。</text>
+
+  <rect x="70" y="944" width="1460" height="102" rx="18" fill="#f8fafc" stroke="#d7e0ea"/>
+  <text x="96" y="976" class="layer">Layer 5 物理对象层</text>
+  <text x="96" y="1002" class="body">仿真侧是 world、障碍物、夹具、机器人模型；真机侧是真实机械臂、支架、工位、线缆和现场风险。P5 会开始更强地依赖这一层的场景正确性。</text>
+  <text x="96" y="1028" class="small">因此：P5-Sim 可以先做，但 P5-Real 的最终安全结论仍然不能脱离真实工位。</text>
+
+  <line x1="800" y1="368" x2="800" y2="394" stroke="#5c6f82" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="800" y1="520" x2="800" y2="546" stroke="#5c6f82" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="800" y1="664" x2="800" y2="690" stroke="#5c6f82" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="615" y1="916" x2="615" y2="944" stroke="#5c6f82" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="1245" y1="916" x2="1245" y2="944" stroke="#5c6f82" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="1180" y="242" width="350" height="140" rx="18" fill="#fff3f3" stroke="#efb7b7"/>
+  <text x="1202" y="274" class="calloutTitle">P4 / P5 边界</text>
+  <text x="1202" y="300" class="calloutBody">P4：固定场景任务闭环</text>
+  <text x="1202" y="324" class="calloutBody">P5：双臂协同、约束、避障、场景</text>
+  <text x="1202" y="348" class="calloutBody">MoveIt 是 P5 的下层能力平台，不是 P5 本身。</text>
+  <text x="1202" y="372" class="calloutBody">P5 不是“另起一套”，而是在现有合同上往上加能力。</text>
+</svg>

@@ -2,21 +2,22 @@
 
 ## 当前阶段
 
-- 当前阶段：`P4 双臂固定场景任务闭环`
+- 当前阶段：`P4 / P5 过渡阶段`
 - P1、P2、P3 主体已完成
 
-## 优先级 A：固化仿真可用主线
+## 优先级 A：启动 P5-Sim
 
-- 保持默认 `with_gz_gui:=false` 的 server-only 路径
-- 默认不再重复 `spawner` 已由 `gz_ros2_control` 激活的 controller
-- 收口启动日志中的重复配置噪声
-- 当前入口：[../operations/simulation_runbook.md](../operations/simulation_runbook.md)
+- 在现有 MoveIt 基础上继续做双臂协同能力
+- 引入场景障碍物、Planning Scene 和约束
+- 定义双臂同步 / 串行执行策略
+- 维持当前任务入口和 controller 合同不变
+- 当前边界入口：[architecture_layers.md](architecture_layers.md)
 
-## 优先级 B：继续做点位与空间建模
+## 优先级 B：保留 P4-B 真机部分
 
-- 固定一组可重复回位的初始 / 安全位
-- 明确左右臂在当前工位下的安全活动空间
-- 再在该空间内定义预备位和任务位
+- 工位与模型对齐延后一周
+- 固定位、预备位、任务位的真机确认暂缓
+- 真机闭环验收暂缓
 - 当前入口：[../operations/hardware_alignment_checklist.md](../operations/hardware_alignment_checklist.md)
 
 ## 优先级 C：回到真机做阶段验收
