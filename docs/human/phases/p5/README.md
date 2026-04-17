@@ -137,6 +137,28 @@ P5-Sim 第一版完成时，至少要满足：
 4. 不改现有 joint / group / controller / action 合同
 5. 静态场景只作为能力验证场景，不作为真机安全结论来源
 
+## 当前未完成的回归确认
+
+本轮代码已新增：
+
+- 多 stage task schema
+- `p5_tasks.yaml`
+- `sim_static_demo` 场景
+- `Planning Scene` 注入
+- 仿真 ros2_control 插件链切到 `ign_ros2_control`
+
+但这些仍未形成 Linux 侧最终通过结论。最近一次用户验证显示：
+
+- `ros2 launch dual_nero_bringup simulation.launch.py` 日志出现 `Failed to load system plugin [libgz_ros2_control-system.so]`
+- `ros2 control list_controllers` 返回 `No controllers are currently loaded!`
+- 因此 `dual_stage_demo` 还不能算已验收通过
+
+新窗口继续工作时，优先级应是：
+
+1. 先恢复 controller
+2. 再验证 `dual_stage_demo`
+3. 最后再继续扩大 P5 功能面
+
 ## 本阶段明确后移的内容
 
 ### 移到 P6

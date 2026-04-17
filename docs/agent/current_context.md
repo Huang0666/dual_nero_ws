@@ -22,12 +22,19 @@
   - `P4-A 仿真执行链`：已完成
   - `P4-B 真机固定场景闭环`：延期
   - `P5-Sim`：第一版实施中
+- 本轮新改动：
+  - `run_dual_arm_task` 升级为多 stage task schema
+  - 新增 `p5_tasks.yaml`
+  - 新增静态场景 profile 与 `Planning Scene` 注入代码
+  - 将 sim 控制插件链从 `gz_ros2_control` 切到 `ign_ros2_control`
+- 上述新改动仍待 Linux 回归验证；用户最近一次 Linux 观察到 controller 未加载
 
 ## 当前正式路径
 
 - 正式执行架构仍保持 bridge 合同，不切到另一套上层入口
 - 仿真默认使用 server-only `gz sim`
-- 当前仿真默认由 `gz_ros2_control / controller_manager` 自动加载 controller
+- P4 基线验证通过时，controller 可自动加载
+- 当前最新代码候选切到 `ign_ros2_control / controller_manager`，尚待 Linux 重新验证
 
 ## 当前问题判断
 
@@ -41,11 +48,13 @@
 
 1. 按 [../human/phases/p5/README.md](../human/phases/p5/README.md) 继续做 P5-v1：多 stage task、最小协同语义、最小失败策略、能力验证场景
 2. 保留 P4-B 真机部分，等待工位与模型对齐恢复
-3. 按 [../human/phases/p6/README.md](../human/phases/p6/README.md) 规划 P6 进入条件
-4. 把动态障碍物 / 复杂调度 / 复杂真机验收挂到 P7 / P8，而不是塞回 P5
+3. 先完成最新 P5 改动在 Linux 上的回归验证，尤其是 controller 恢复与 `dual_stage_demo`
+4. 按 [../human/phases/p6/README.md](../human/phases/p6/README.md) 规划 P6 进入条件
+5. 把动态障碍物 / 复杂调度 / 复杂真机验收挂到 P7 / P8，而不是塞回 P5
 
 ## 当前应优先参考
 
+- 仓库级规则：`/.codex/AGENTS.md`
 - [../human/overview/project_status.md](../human/overview/project_status.md)
 - [../human/overview/next_actions.md](../human/overview/next_actions.md)
 - [../human/operations/simulation_runbook.md](../human/operations/simulation_runbook.md)

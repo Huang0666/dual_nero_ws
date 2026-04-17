@@ -13,6 +13,10 @@
 - 补最小失败策略：`abort / return_safe`
 - 再接静态 Planning Scene 能力验证场景
 - 全程维持当前任务入口和 controller 合同不变
+- 当前最先要做的不是继续扩功能，而是回归确认最新改动：
+  - `ign_ros2_control` 插件链是否真正恢复 controller
+  - `sim_static_demo` 坐标是否贴合当前 URDF
+  - `dual_stage_demo` 是否能完整跑通
 - 当前边界入口：[architecture_layers.md](architecture_layers.md)
 - 当前实施入口：[../phases/p5/README.md](../phases/p5/README.md)
 

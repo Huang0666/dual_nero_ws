@@ -23,6 +23,19 @@
 - `P4-B 真机固定场景闭环`：延期，等待工位与模型对齐
 - `P5-Sim`：第一版实施中
 
+补充说明：
+
+- 上面“仿真后端已验证打通”指的是 `P4` 基线仿真链已验证通过。
+- 本轮 `P5` 新改动已引入：
+  - 多 stage task schema
+  - 静态 scene profile
+  - `Planning Scene` 注入代码
+  - `ign_ros2_control` 插件链切换
+- 这些新增改动在 Linux 上仍待回归确认。用户最近一次验证时看到：
+  - `Failed to load system plugin [libgz_ros2_control-system.so]`
+  - `ros2 control list_controllers` 返回 `No controllers are currently loaded!`
+- 因此当前不能把最新 `P5` 场景链和最新插件链视为“已验证通过”。
+
 ## 当前正式可交付路径
 
 - 真机正式任务入口：`ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync`
@@ -69,6 +82,7 @@
   - 已形成 [../phases/p5/README.md](../phases/p5/README.md) 作为实施边界文档
   - 已开始把 `run_dual_arm_task` 从 P4 固定结构升级到 P5 多 stage 结构
   - 已补上静态 scene profile 与 Planning Scene 注入代码骨架，待 Linux 仿真回归验证
+  - 已尝试切换到 `ign_ros2_control` 插件链，待 Linux 回归验证 controller 是否恢复
 
 ## 当前阶段卡点
 
@@ -80,7 +94,7 @@
 
 ## 当前最高优先级
 
-1. 继续做 `P5-Sim`：多 stage task、最小协同语义、最小失败策略、静态场景
+1. 先完成 `P5-Sim` 最新改动的 Linux 回归验证：controller 恢复、`dual_stage_demo` 跑通、scene 坐标贴合
 2. 保留 `P4-B` 真机部分，等待工位与模型对齐恢复
 3. 把后续能力按阶段挂到 `P6 / P7 / P8`，避免重新塞回 P5
 
