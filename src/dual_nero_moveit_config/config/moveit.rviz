@@ -16,6 +16,7 @@ Visualization Manager:
     - Class: moveit_rviz_plugin/MotionPlanning
       Name: MotionPlanning
       Planned Path:
+        Color Enabled: false
         Loop Animation: true
         State Display Time: 0.05 s
         Trajectory Topic: display_planned_path
@@ -24,7 +25,7 @@ Visualization Manager:
       Scene Geometry:
         Scene Alpha: 1
       Scene Robot:
-        Robot Alpha: 0.5
+        Robot Alpha: 1
       Value: true
   Global Options:
     Fixed Frame: world
