@@ -17,9 +17,9 @@
   <xacro:arg name="enable_arms" default="true"/>
   <xacro:arg name="left_mount_face_xyz" default="0.01 0 0"/>
   <xacro:arg name="right_mount_face_xyz" default="-0.01 0 0"/>
-  <xacro:arg name="left_arm_mount_xyz" default="0 0 0"/>
+  <xacro:arg name="left_arm_mount_xyz" default="0 0 0.0045"/>
   <xacro:arg name="left_arm_mount_rpy" default="0 -1.5708 3.14159"/>
-  <xacro:arg name="right_arm_mount_xyz" default="0 0 0"/>
+  <xacro:arg name="right_arm_mount_xyz" default="0 0 0.0045"/>
   <xacro:arg name="right_arm_mount_rpy" default="0 -1.5708 0"/>
 
   <xacro:include filename="$(find dual_nero_description)/urdf/nero_single_arm_macro.xacro"/>
