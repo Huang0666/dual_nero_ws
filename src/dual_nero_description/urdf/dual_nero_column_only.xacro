@@ -6,8 +6,18 @@
   <xacro:arg name="column_size" default="0.105 0.105 0.52"/>
   <xacro:arg name="column_visual_xyz" default="0 0 0.26"/>
 
+  <xacro:arg name="head_upper_width" default="0.25"/>
+  <xacro:arg name="head_lower_width" default="0.125"/>
+  <xacro:arg name="head_depth" default="0.125"/>
+  <xacro:arg name="head_height" default="0.31"/>
+  <xacro:arg name="head_base_xyz" default="0 0 0.52"/>
+
   <material name="column_silver">
     <color rgba="0.8 0.8 0.8 1.0"/>
+  </material>
+
+  <material name="head_gray">
+    <color rgba="0.72 0.72 0.72 1.0"/>
   </material>
 
   <link name="world"/>
@@ -32,6 +42,35 @@
     <parent link="world"/>
     <child link="column"/>
     <origin xyz="$(arg world_to_column_xyz)" rpy="$(arg world_to_column_rpy)"/>
+  </joint>
+
+  <link name="column_head">
+    <visual>
+      <origin xyz="0 0 0.0775" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.15625 $(arg head_depth) 0.155"/>
+      </geometry>
+      <material name="head_gray"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0.2325" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.21875 $(arg head_depth) 0.155"/>
+      </geometry>
+      <material name="head_gray"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.155" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg head_upper_width) $(arg head_depth) $(arg head_height)"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="column_to_head" type="fixed">
+    <parent link="column"/>
+    <child link="column_head"/>
+    <origin xyz="$(arg head_base_xyz)" rpy="0 0 0"/>
   </joint>
 
 </robot>
