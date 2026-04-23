@@ -8,6 +8,8 @@
 
   <xacro:arg name="head_base_xyz" default="0 0 0.52"/>
   <xacro:arg name="head_mesh" default="package://dual_nero_description/meshes/generated/column_head_trapezoid.stl"/>
+  <xacro:arg name="top_bar_size" default="0.255 0.02 0.02"/>
+  <xacro:arg name="top_bar_xyz" default="0 0 0.32"/>
 
   <material name="column_silver">
     <color rgba="0.8 0.8 0.8 1.0"/>
@@ -61,6 +63,28 @@
     <parent link="column"/>
     <child link="column_head"/>
     <origin xyz="$(arg head_base_xyz)" rpy="0 0 0"/>
+  </joint>
+
+  <link name="top_bar">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg top_bar_size)"/>
+      </geometry>
+      <material name="head_gray"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg top_bar_size)"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="head_to_top_bar" type="fixed">
+    <parent link="column_head"/>
+    <child link="top_bar"/>
+    <origin xyz="$(arg top_bar_xyz)" rpy="0 0 0"/>
   </joint>
 
 </robot>
