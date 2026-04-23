@@ -16,9 +16,10 @@ Visualization Manager:
     - Class: moveit_rviz_plugin/MotionPlanning
       Name: MotionPlanning
       Planned Path:
-        Color Enabled: false
+        Color Enabled: true
         Loop Animation: true
-        Robot Alpha: 1
+        Robot Alpha: 0.35
+        Robot Color: 60; 170; 255
         Show Robot Collision: false
         Show Robot Visual: true
         State Display Time: 0.05 s
