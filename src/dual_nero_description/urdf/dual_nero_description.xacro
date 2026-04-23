@@ -1,10 +1,44 @@
 <?xml version="1.0"?>
 <robot name="dual_nero_description" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!-- 引入单臂宏 -->
+  <xacro:arg name="use_sim_visuals" default="false"/>
+  <xacro:arg name="world_to_base_xyz" default="0 0 0"/>
+  <xacro:arg name="world_to_base_rpy" default="0 0 0"/>
+  <xacro:arg name="base_plate_size" default="0.20 0.08 0.04"/>
+  <xacro:arg name="base_plate_visual_xyz" default="0 0 0.02"/>
+  <xacro:arg name="column_size" default="0.04 0.04 1.50"/>
+  <xacro:arg name="column_visual_xyz" default="0 0 0.75"/>
+  <xacro:arg name="column_joint_xyz" default="0 0 0.04"/>
+  <xacro:arg name="column_joint_rpy" default="0 0 0"/>
+  <xacro:arg name="enable_support_frame" default="true"/>
+  <xacro:arg name="support_frame_size" default="0.23 0.01 0.30"/>
+  <xacro:arg name="support_frame_visual_xyz" default="0 0 0.15"/>
+  <xacro:arg name="support_frame_joint_xyz" default="0 0.06 0.49"/>
+  <xacro:arg name="support_frame_joint_rpy" default="0 0 0"/>
+  <xacro:arg name="crossbar_size" default="0.25 0.04 0.04"/>
+  <xacro:arg name="crossbar_joint_xyz" default="0 0 0.81"/>
+  <xacro:arg name="crossbar_joint_rpy" default="0 0 0"/>
+  <xacro:arg name="left_mount_box_size" default="0.07 0.02 0.095"/>
+  <xacro:arg name="left_mount_box_xyz" default="0.13 0 0"/>
+  <xacro:arg name="left_mount_box_rpy" default="0 0 0"/>
+  <xacro:arg name="right_mount_box_size" default="0.07 0.02 0.095"/>
+  <xacro:arg name="right_mount_box_xyz" default="-0.13 0 0"/>
+  <xacro:arg name="right_mount_box_rpy" default="0 0 0"/>
+  <xacro:arg name="left_mount_xyz" default="0 0 0"/>
+  <xacro:arg name="left_mount_rpy" default="0 -1.5708 3.14159"/>
+  <xacro:arg name="right_mount_xyz" default="0 0 0"/>
+  <xacro:arg name="right_mount_rpy" default="0 -1.5708 0"/>
+
+  <xacro:property name="support_frame_enabled" value="${str(enable_support_frame).lower() == 'true'}"/>
+
+  <!--
+    Reuse the validated single-arm chain and only parameterize the shared mount structure.
+    Length values are in meters. The current defaults come from the 2026-04-23 first-pass
+    measurement set and intentionally keep arm mount offsets at zero relative to each mount box
+    until the physical mounting-face center and orientation are re-measured.
+  -->
   <xacro:include filename="$(find dual_nero_description)/urdf/nero_single_arm_macro.xacro"/>
 
-  <!-- 颜色材质 -->
   <material name="blue">
     <color rgba="0.2 0.4 0.9 1.0"/>
   </material>
@@ -17,22 +51,20 @@
     <color rgba="0.8 0.8 0.8 1.0"/>
   </material>
 
-  <!-- 世界坐标 -->
   <link name="world"/>
 
-  <!-- 底座 -->
   <link name="dual_base_plate">
     <visual>
-      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+      <origin xyz="$(arg base_plate_visual_xyz)" rpy="0 0 0"/>
       <geometry>
-        <box size="0.20 0.08 0.04"/>
+        <box size="$(arg base_plate_size)"/>
       </geometry>
       <material name="blue"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+      <origin xyz="$(arg base_plate_visual_xyz)" rpy="0 0 0"/>
       <geometry>
-        <box size="0.20 0.08 0.04"/>
+        <box size="$(arg base_plate_size)"/>
       </geometry>
     </collision>
   </link>
@@ -40,22 +72,21 @@
   <joint name="world_to_dual_base_plate" type="fixed">
     <parent link="world"/>
     <child link="dual_base_plate"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="$(arg world_to_base_xyz)" rpy="$(arg world_to_base_rpy)"/>
   </joint>
 
-  <!-- 立柱 -->
   <link name="dual_column">
     <visual>
-      <origin xyz="0 0 0.75" rpy="0 0 0"/>
+      <origin xyz="$(arg column_visual_xyz)" rpy="0 0 0"/>
       <geometry>
-        <box size="0.04 0.04 1.50"/>
+        <box size="$(arg column_size)"/>
       </geometry>
       <material name="gray"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0.75" rpy="0 0 0"/>
+      <origin xyz="$(arg column_visual_xyz)" rpy="0 0 0"/>
       <geometry>
-        <box size="0.04 0.04 1.50"/>
+        <box size="$(arg column_size)"/>
       </geometry>
     </collision>
   </link>
@@ -63,22 +94,45 @@
   <joint name="dual_base_plate_to_column" type="fixed">
     <parent link="dual_base_plate"/>
     <child link="dual_column"/>
-    <origin xyz="0 0 0.04" rpy="0 0 0"/>
+    <origin xyz="$(arg column_joint_xyz)" rpy="$(arg column_joint_rpy)"/>
   </joint>
 
-  <!-- 横梁 -->
+  <xacro:if value="${support_frame_enabled}">
+    <link name="dual_support_frame">
+      <visual>
+        <origin xyz="$(arg support_frame_visual_xyz)" rpy="0 0 0"/>
+        <geometry>
+          <box size="$(arg support_frame_size)"/>
+        </geometry>
+        <material name="gray"/>
+      </visual>
+      <collision>
+        <origin xyz="$(arg support_frame_visual_xyz)" rpy="0 0 0"/>
+        <geometry>
+          <box size="$(arg support_frame_size)"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="dual_column_to_support_frame" type="fixed">
+      <parent link="dual_column"/>
+      <child link="dual_support_frame"/>
+      <origin xyz="$(arg support_frame_joint_xyz)" rpy="$(arg support_frame_joint_rpy)"/>
+    </joint>
+  </xacro:if>
+
   <link name="dual_crossbar">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.34 0.05 0.05"/>
+        <box size="$(arg crossbar_size)"/>
       </geometry>
       <material name="silver"/>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.34 0.05 0.05"/>
+        <box size="$(arg crossbar_size)"/>
       </geometry>
     </collision>
   </link>
@@ -86,23 +140,65 @@
   <joint name="dual_column_to_crossbar" type="fixed">
     <parent link="dual_column"/>
     <child link="dual_crossbar"/>
-    <origin xyz="0 0 1.50" rpy="0 0 0"/>
+    <origin xyz="$(arg crossbar_joint_xyz)" rpy="$(arg crossbar_joint_rpy)"/>
   </joint>
 
-  <!-- 右臂 -->
+  <link name="left_mount_box">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg left_mount_box_size)"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg left_mount_box_size)"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="dual_crossbar_to_left_mount_box" type="fixed">
+    <parent link="dual_crossbar"/>
+    <child link="left_mount_box"/>
+    <origin xyz="$(arg left_mount_box_xyz)" rpy="$(arg left_mount_box_rpy)"/>
+  </joint>
+
+  <link name="right_mount_box">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg right_mount_box_size)"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg right_mount_box_size)"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="dual_crossbar_to_right_mount_box" type="fixed">
+    <parent link="dual_crossbar"/>
+    <child link="right_mount_box"/>
+    <origin xyz="$(arg right_mount_box_xyz)" rpy="$(arg right_mount_box_rpy)"/>
+  </joint>
+
   <xacro:nero_single_arm
       prefix="right_"
-      parent="dual_crossbar"
-      xyz="-0.145 0 0"
-      rpy="0 -1.5708 0"
+      parent="right_mount_box"
+      xyz="$(arg right_mount_xyz)"
+      rpy="$(arg right_mount_rpy)"
       use_sim_visuals="${use_sim_visuals}"/>
 
-  <!-- 左臂 -->
   <xacro:nero_single_arm
       prefix="left_"
-      parent="dual_crossbar"
-      xyz="0.145 0 0"
-      rpy="0 -1.5708 3.14159"
+      parent="left_mount_box"
+      xyz="$(arg left_mount_xyz)"
+      rpy="$(arg left_mount_rpy)"
       use_sim_visuals="${use_sim_visuals}"/>
 
 </robot>
