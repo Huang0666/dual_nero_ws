@@ -10,6 +10,9 @@
   <xacro:arg name="head_mesh" default="package://dual_nero_description/meshes/generated/column_head_trapezoid.stl"/>
   <xacro:arg name="top_bar_size" default="0.255 0.02 0.02"/>
   <xacro:arg name="top_bar_xyz" default="0 0 0.32"/>
+  <xacro:arg name="side_box_size" default="0.02 0.08 0.095"/>
+  <xacro:arg name="left_side_box_xyz" default="0.1375 0 0"/>
+  <xacro:arg name="right_side_box_xyz" default="-0.1375 0 0"/>
 
   <material name="column_silver">
     <color rgba="0.8 0.8 0.8 1.0"/>
@@ -17,6 +20,10 @@
 
   <material name="head_gray">
     <color rgba="0.72 0.72 0.72 1.0"/>
+  </material>
+
+  <material name="box_white">
+    <color rgba="0.95 0.95 0.95 1.0"/>
   </material>
 
   <link name="world"/>
@@ -85,6 +92,50 @@
     <parent link="column_head"/>
     <child link="top_bar"/>
     <origin xyz="$(arg top_bar_xyz)" rpy="0 0 0"/>
+  </joint>
+
+  <link name="left_side_box">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg side_box_size)"/>
+      </geometry>
+      <material name="box_white"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg side_box_size)"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="top_bar_to_left_side_box" type="fixed">
+    <parent link="top_bar"/>
+    <child link="left_side_box"/>
+    <origin xyz="$(arg left_side_box_xyz)" rpy="0 0 0"/>
+  </joint>
+
+  <link name="right_side_box">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg side_box_size)"/>
+      </geometry>
+      <material name="box_white"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg side_box_size)"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="top_bar_to_right_side_box" type="fixed">
+    <parent link="top_bar"/>
+    <child link="right_side_box"/>
+    <origin xyz="$(arg right_side_box_xyz)" rpy="0 0 0"/>
   </joint>
 
 </robot>
