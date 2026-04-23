@@ -15,9 +15,11 @@
   <xacro:arg name="left_side_box_xyz" default="0.1375 0 0"/>
   <xacro:arg name="right_side_box_xyz" default="-0.1375 0 0"/>
   <xacro:arg name="enable_arms" default="true"/>
-  <xacro:arg name="left_arm_mount_xyz" default="0.01 0 0"/>
+  <xacro:arg name="left_mount_face_xyz" default="0.01 0 0"/>
+  <xacro:arg name="right_mount_face_xyz" default="-0.01 0 0"/>
+  <xacro:arg name="left_arm_mount_xyz" default="0 0 0"/>
   <xacro:arg name="left_arm_mount_rpy" default="0 -1.5708 3.14159"/>
-  <xacro:arg name="right_arm_mount_xyz" default="-0.01 0 0"/>
+  <xacro:arg name="right_arm_mount_xyz" default="0 0 0"/>
   <xacro:arg name="right_arm_mount_rpy" default="0 -1.5708 0"/>
 
   <xacro:include filename="$(find dual_nero_description)/urdf/nero_single_arm_macro.xacro"/>
@@ -124,6 +126,13 @@
     <origin xyz="$(arg left_side_box_xyz)" rpy="0 0 0"/>
   </joint>
 
+  <link name="left_mount_face"/>
+  <joint name="left_side_box_to_mount_face" type="fixed">
+    <parent link="left_side_box"/>
+    <child link="left_mount_face"/>
+    <origin xyz="$(arg left_mount_face_xyz)" rpy="0 0 0"/>
+  </joint>
+
   <link name="right_side_box">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -146,17 +155,24 @@
     <origin xyz="$(arg right_side_box_xyz)" rpy="0 0 0"/>
   </joint>
 
+  <link name="right_mount_face"/>
+  <joint name="right_side_box_to_mount_face" type="fixed">
+    <parent link="right_side_box"/>
+    <child link="right_mount_face"/>
+    <origin xyz="$(arg right_mount_face_xyz)" rpy="0 0 0"/>
+  </joint>
+
   <xacro:if value="$(arg enable_arms)">
     <xacro:nero_single_arm
         prefix="left_"
-        parent="left_side_box"
+        parent="left_mount_face"
         xyz="$(arg left_arm_mount_xyz)"
         rpy="$(arg left_arm_mount_rpy)"
         use_sim_visuals="$(arg use_sim_visuals)"/>
 
     <xacro:nero_single_arm
         prefix="right_"
-        parent="right_side_box"
+        parent="right_mount_face"
         xyz="$(arg right_arm_mount_xyz)"
         rpy="$(arg right_arm_mount_rpy)"
         use_sim_visuals="$(arg use_sim_visuals)"/>
