@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot name="dual_nero_column_only" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <xacro:arg name="use_sim_visuals" default="true"/>
+  <xacro:arg name="use_sim_visuals" default="false"/>
   <xacro:arg name="world_to_column_xyz" default="0 0 0"/>
   <xacro:arg name="world_to_column_rpy" default="0 0 0"/>
   <xacro:arg name="column_size" default="0.105 0.105 0.52"/>
