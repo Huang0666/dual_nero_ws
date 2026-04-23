@@ -190,13 +190,13 @@
       parent="right_mount_box"
       xyz="$(arg right_mount_xyz)"
       rpy="$(arg right_mount_rpy)"
-      use_sim_visuals="${use_sim_visuals}"/>
+      use_sim_visuals="$(arg use_sim_visuals)"/>
 
   <xacro:nero_single_arm
       prefix="left_"
       parent="left_mount_box"
       xyz="$(arg left_mount_xyz)"
       rpy="$(arg left_mount_rpy)"
-      use_sim_visuals="${use_sim_visuals}"/>
+      use_sim_visuals="$(arg use_sim_visuals)"/>
 
 </robot>
