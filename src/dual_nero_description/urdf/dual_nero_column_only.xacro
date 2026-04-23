@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <robot name="dual_nero_column_only" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <xacro:arg name="use_sim_visuals" default="true"/>
   <xacro:arg name="world_to_column_xyz" default="0 0 0"/>
   <xacro:arg name="world_to_column_rpy" default="0 0 0"/>
   <xacro:arg name="column_size" default="0.105 0.105 0.52"/>
@@ -13,6 +14,13 @@
   <xacro:arg name="side_box_size" default="0.02 0.08 0.095"/>
   <xacro:arg name="left_side_box_xyz" default="0.1375 0 0"/>
   <xacro:arg name="right_side_box_xyz" default="-0.1375 0 0"/>
+  <xacro:arg name="enable_arms" default="true"/>
+  <xacro:arg name="left_arm_mount_xyz" default="0.01 0 0"/>
+  <xacro:arg name="left_arm_mount_rpy" default="0 -1.5708 3.14159"/>
+  <xacro:arg name="right_arm_mount_xyz" default="-0.01 0 0"/>
+  <xacro:arg name="right_arm_mount_rpy" default="0 -1.5708 0"/>
+
+  <xacro:include filename="$(find dual_nero_description)/urdf/nero_single_arm_macro.xacro"/>
 
   <material name="column_silver">
     <color rgba="0.8 0.8 0.8 1.0"/>
@@ -137,5 +145,21 @@
     <child link="right_side_box"/>
     <origin xyz="$(arg right_side_box_xyz)" rpy="0 0 0"/>
   </joint>
+
+  <xacro:if value="$(arg enable_arms)">
+    <xacro:nero_single_arm
+        prefix="left_"
+        parent="left_side_box"
+        xyz="$(arg left_arm_mount_xyz)"
+        rpy="$(arg left_arm_mount_rpy)"
+        use_sim_visuals="$(arg use_sim_visuals)"/>
+
+    <xacro:nero_single_arm
+        prefix="right_"
+        parent="right_side_box"
+        xyz="$(arg right_arm_mount_xyz)"
+        rpy="$(arg right_arm_mount_rpy)"
+        use_sim_visuals="$(arg use_sim_visuals)"/>
+  </xacro:if>
 
 </robot>

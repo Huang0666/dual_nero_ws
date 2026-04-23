@@ -21,6 +21,12 @@ def generate_launch_description():
         [pkg_share, "rviz", "dual_nero.rviz"]
     )
 
+    joint_state_publisher_node = Node(
+        package="joint_state_publisher_gui",
+        executable="joint_state_publisher_gui",
+        name="joint_state_publisher_gui",
+    )
+
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -37,6 +43,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        joint_state_publisher_node,
         robot_state_publisher_node,
         rviz_node,
     ])
