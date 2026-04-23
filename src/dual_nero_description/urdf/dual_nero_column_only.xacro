@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<robot name="dual_nero_column_only" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:arg name="world_to_column_xyz" default="0 0 0"/>
+  <xacro:arg name="world_to_column_rpy" default="0 0 0"/>
+  <xacro:arg name="column_size" default="0.105 0.105 0.52"/>
+  <xacro:arg name="column_visual_xyz" default="0 0 0.26"/>
+
+  <material name="column_silver">
+    <color rgba="0.8 0.8 0.8 1.0"/>
+  </material>
+
+  <link name="world"/>
+
+  <link name="column">
+    <visual>
+      <origin xyz="$(arg column_visual_xyz)" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg column_size)"/>
+      </geometry>
+      <material name="column_silver"/>
+    </visual>
+    <collision>
+      <origin xyz="$(arg column_visual_xyz)" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg column_size)"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="world_to_column" type="fixed">
+    <parent link="world"/>
+    <child link="column"/>
+    <origin xyz="$(arg world_to_column_xyz)" rpy="$(arg world_to_column_rpy)"/>
+  </joint>
+
+</robot>
