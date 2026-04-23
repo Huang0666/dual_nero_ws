@@ -1,0 +1,91 @@
+solid column_head_trapezoid
+  facet normal 0 0 -1
+    outer loop
+      vertex -0.0625 -0.0625 0
+      vertex 0.0625 0.0625 0
+      vertex 0.0625 -0.0625 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex -0.0625 -0.0625 0
+      vertex -0.0625 0.0625 0
+      vertex 0.0625 0.0625 0
+    endloop
+  endfacet
+
+  facet normal 0 0 1
+    outer loop
+      vertex -0.125 -0.0625 0.31
+      vertex 0.125 -0.0625 0.31
+      vertex 0.125 0.0625 0.31
+    endloop
+  endfacet
+  facet normal 0 0 1
+    outer loop
+      vertex -0.125 -0.0625 0.31
+      vertex 0.125 0.0625 0.31
+      vertex -0.125 0.0625 0.31
+    endloop
+  endfacet
+
+  facet normal 0 -1 0
+    outer loop
+      vertex -0.0625 -0.0625 0
+      vertex 0.0625 -0.0625 0
+      vertex 0.125 -0.0625 0.31
+    endloop
+  endfacet
+  facet normal 0 -1 0
+    outer loop
+      vertex -0.0625 -0.0625 0
+      vertex 0.125 -0.0625 0.31
+      vertex -0.125 -0.0625 0.31
+    endloop
+  endfacet
+
+  facet normal 0 1 0
+    outer loop
+      vertex 0.0625 0.0625 0
+      vertex -0.0625 0.0625 0
+      vertex -0.125 0.0625 0.31
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 0.0625 0.0625 0
+      vertex -0.125 0.0625 0.31
+      vertex 0.125 0.0625 0.31
+    endloop
+  endfacet
+
+  facet normal 0.9803 0 -0.1974
+    outer loop
+      vertex 0.0625 -0.0625 0
+      vertex 0.0625 0.0625 0
+      vertex 0.125 0.0625 0.31
+    endloop
+  endfacet
+  facet normal 0.9803 0 -0.1974
+    outer loop
+      vertex 0.0625 -0.0625 0
+      vertex 0.125 0.0625 0.31
+      vertex 0.125 -0.0625 0.31
+    endloop
+  endfacet
+
+  facet normal -0.9803 0 -0.1974
+    outer loop
+      vertex -0.0625 0.0625 0
+      vertex -0.0625 -0.0625 0
+      vertex -0.125 -0.0625 0.31
+    endloop
+  endfacet
+  facet normal -0.9803 0 -0.1974
+    outer loop
+      vertex -0.0625 0.0625 0
+      vertex -0.125 -0.0625 0.31
+      vertex -0.125 0.0625 0.31
+    endloop
+  endfacet
+endsolid column_head_trapezoid
