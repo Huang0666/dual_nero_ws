@@ -10,20 +10,23 @@
   <xacro:arg name="column_visual_xyz" default="0 0 0.75"/>
   <xacro:arg name="column_joint_xyz" default="0 0 0.04"/>
   <xacro:arg name="column_joint_rpy" default="0 0 0"/>
-  <xacro:arg name="enable_support_frame" default="true"/>
-  <xacro:arg name="support_frame_size" default="0.23 0.01 0.30"/>
-  <xacro:arg name="support_frame_visual_xyz" default="0 0 0.15"/>
-  <xacro:arg name="support_frame_joint_xyz" default="0 0.06 0.49"/>
-  <xacro:arg name="support_frame_joint_rpy" default="0 0 0"/>
+  <xacro:arg name="enable_support_plates" default="true"/>
+  <xacro:arg name="support_plate_size" default="0.23 0.01 0.30"/>
+  <xacro:arg name="front_support_plate_joint_xyz" default="0 0.035 0.49"/>
+  <xacro:arg name="front_support_plate_joint_rpy" default="0 0 0"/>
+  <xacro:arg name="rear_support_plate_joint_xyz" default="0 -0.035 0.49"/>
+  <xacro:arg name="rear_support_plate_joint_rpy" default="0 0 0"/>
   <xacro:arg name="crossbar_size" default="0.25 0.04 0.04"/>
   <xacro:arg name="crossbar_joint_xyz" default="0 0 0.81"/>
   <xacro:arg name="crossbar_joint_rpy" default="0 0 0"/>
-  <xacro:arg name="left_mount_box_size" default="0.07 0.02 0.095"/>
-  <xacro:arg name="left_mount_box_xyz" default="0.13 0 0"/>
-  <xacro:arg name="left_mount_box_rpy" default="0 0 0"/>
-  <xacro:arg name="right_mount_box_size" default="0.07 0.02 0.095"/>
-  <xacro:arg name="right_mount_box_xyz" default="-0.13 0 0"/>
-  <xacro:arg name="right_mount_box_rpy" default="0 0 0"/>
+  <xacro:arg name="center_top_bracket_size" default="0.03 0.03 0.08"/>
+  <xacro:arg name="center_top_bracket_xyz" default="0 0 0.06"/>
+  <xacro:arg name="left_mount_plate_size" default="0.025 0.01 0.095"/>
+  <xacro:arg name="left_mount_plate_xyz" default="0.13 0 0"/>
+  <xacro:arg name="left_mount_plate_rpy" default="0 0 0"/>
+  <xacro:arg name="right_mount_plate_size" default="0.025 0.01 0.095"/>
+  <xacro:arg name="right_mount_plate_xyz" default="-0.13 0 0"/>
+  <xacro:arg name="right_mount_plate_rpy" default="0 0 0"/>
   <xacro:arg name="left_mount_xyz" default="0 0 0"/>
   <xacro:arg name="left_mount_rpy" default="0 -1.5708 3.14159"/>
   <xacro:arg name="right_mount_xyz" default="0 0 0"/>
@@ -32,7 +35,7 @@
   <!--
     Reuse the validated single-arm chain and only parameterize the shared mount structure.
     Length values are in meters. The current defaults come from the 2026-04-23 first-pass
-    measurement set and intentionally keep arm mount offsets at zero relative to each mount box
+    measurement set and intentionally keep arm mount offsets at zero relative to each mount plate
     until the physical mounting-face center and orientation are re-measured.
   -->
   <xacro:include filename="$(find dual_nero_description)/urdf/nero_single_arm_macro.xacro"/>
@@ -95,27 +98,49 @@
     <origin xyz="$(arg column_joint_xyz)" rpy="$(arg column_joint_rpy)"/>
   </joint>
 
-  <xacro:if value="$(arg enable_support_frame)">
-    <link name="dual_support_frame">
+  <xacro:if value="$(arg enable_support_plates)">
+    <link name="front_support_plate">
       <visual>
-        <origin xyz="$(arg support_frame_visual_xyz)" rpy="0 0 0"/>
+        <origin xyz="0 0 0.15" rpy="0 0 0"/>
         <geometry>
-          <box size="$(arg support_frame_size)"/>
+          <box size="$(arg support_plate_size)"/>
         </geometry>
         <material name="gray"/>
       </visual>
       <collision>
-        <origin xyz="$(arg support_frame_visual_xyz)" rpy="0 0 0"/>
+        <origin xyz="0 0 0.15" rpy="0 0 0"/>
         <geometry>
-          <box size="$(arg support_frame_size)"/>
+          <box size="$(arg support_plate_size)"/>
         </geometry>
       </collision>
     </link>
 
-    <joint name="dual_column_to_support_frame" type="fixed">
+    <joint name="dual_column_to_front_support_plate" type="fixed">
       <parent link="dual_column"/>
-      <child link="dual_support_frame"/>
-      <origin xyz="$(arg support_frame_joint_xyz)" rpy="$(arg support_frame_joint_rpy)"/>
+      <child link="front_support_plate"/>
+      <origin xyz="$(arg front_support_plate_joint_xyz)" rpy="$(arg front_support_plate_joint_rpy)"/>
+    </joint>
+
+    <link name="rear_support_plate">
+      <visual>
+        <origin xyz="0 0 0.15" rpy="0 0 0"/>
+        <geometry>
+          <box size="$(arg support_plate_size)"/>
+        </geometry>
+        <material name="gray"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0.15" rpy="0 0 0"/>
+        <geometry>
+          <box size="$(arg support_plate_size)"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="dual_column_to_rear_support_plate" type="fixed">
+      <parent link="dual_column"/>
+      <child link="rear_support_plate"/>
+      <origin xyz="$(arg rear_support_plate_joint_xyz)" rpy="$(arg rear_support_plate_joint_rpy)"/>
     </joint>
   </xacro:if>
 
@@ -141,60 +166,82 @@
     <origin xyz="$(arg crossbar_joint_xyz)" rpy="$(arg crossbar_joint_rpy)"/>
   </joint>
 
-  <link name="left_mount_box">
+  <link name="center_top_bracket">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="$(arg left_mount_box_size)"/>
+        <box size="$(arg center_top_bracket_size)"/>
       </geometry>
       <material name="silver"/>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="$(arg left_mount_box_size)"/>
+        <box size="$(arg center_top_bracket_size)"/>
       </geometry>
     </collision>
   </link>
 
-  <joint name="dual_crossbar_to_left_mount_box" type="fixed">
+  <joint name="dual_crossbar_to_center_top_bracket" type="fixed">
     <parent link="dual_crossbar"/>
-    <child link="left_mount_box"/>
-    <origin xyz="$(arg left_mount_box_xyz)" rpy="$(arg left_mount_box_rpy)"/>
+    <child link="center_top_bracket"/>
+    <origin xyz="$(arg center_top_bracket_xyz)" rpy="0 0 0"/>
   </joint>
 
-  <link name="right_mount_box">
+  <link name="left_mount_plate">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="$(arg right_mount_box_size)"/>
+        <box size="$(arg left_mount_plate_size)"/>
       </geometry>
       <material name="silver"/>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="$(arg right_mount_box_size)"/>
+        <box size="$(arg left_mount_plate_size)"/>
       </geometry>
     </collision>
   </link>
 
-  <joint name="dual_crossbar_to_right_mount_box" type="fixed">
+  <joint name="dual_crossbar_to_left_mount_plate" type="fixed">
     <parent link="dual_crossbar"/>
-    <child link="right_mount_box"/>
-    <origin xyz="$(arg right_mount_box_xyz)" rpy="$(arg right_mount_box_rpy)"/>
+    <child link="left_mount_plate"/>
+    <origin xyz="$(arg left_mount_plate_xyz)" rpy="$(arg left_mount_plate_rpy)"/>
+  </joint>
+
+  <link name="right_mount_plate">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg right_mount_plate_size)"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="$(arg right_mount_plate_size)"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="dual_crossbar_to_right_mount_plate" type="fixed">
+    <parent link="dual_crossbar"/>
+    <child link="right_mount_plate"/>
+    <origin xyz="$(arg right_mount_plate_xyz)" rpy="$(arg right_mount_plate_rpy)"/>
   </joint>
 
   <xacro:nero_single_arm
       prefix="right_"
-      parent="right_mount_box"
+      parent="right_mount_plate"
       xyz="$(arg right_mount_xyz)"
       rpy="$(arg right_mount_rpy)"
       use_sim_visuals="$(arg use_sim_visuals)"/>
 
   <xacro:nero_single_arm
       prefix="left_"
-      parent="left_mount_box"
+      parent="left_mount_plate"
       xyz="$(arg left_mount_xyz)"
       rpy="$(arg left_mount_rpy)"
       use_sim_visuals="$(arg use_sim_visuals)"/>
