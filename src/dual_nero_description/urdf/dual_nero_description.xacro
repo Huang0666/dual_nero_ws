@@ -29,8 +29,6 @@
   <xacro:arg name="right_mount_xyz" default="0 0 0"/>
   <xacro:arg name="right_mount_rpy" default="0 -1.5708 0"/>
 
-  <xacro:property name="support_frame_enabled" value="${str(enable_support_frame).lower() == 'true'}"/>
-
   <!--
     Reuse the validated single-arm chain and only parameterize the shared mount structure.
     Length values are in meters. The current defaults come from the 2026-04-23 first-pass
@@ -97,7 +95,7 @@
     <origin xyz="$(arg column_joint_xyz)" rpy="$(arg column_joint_rpy)"/>
   </joint>
 
-  <xacro:if value="${support_frame_enabled}">
+  <xacro:if value="$(arg enable_support_frame)">
     <link name="dual_support_frame">
       <visual>
         <origin xyz="$(arg support_frame_visual_xyz)" rpy="0 0 0"/>
