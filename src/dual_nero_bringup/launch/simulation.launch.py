@@ -21,6 +21,7 @@ def _load_defaults() -> dict:
 def _startup_logs(context, *_args, **_kwargs):
     backend = LaunchConfiguration("backend").perform(context)
     world_file = LaunchConfiguration("world_file").perform(context)
+    robot_structure_xacro = LaunchConfiguration("robot_structure_xacro").perform(context)
     with_moveit = LaunchConfiguration("with_moveit").perform(context)
     with_rviz = LaunchConfiguration("with_rviz").perform(context)
     with_gz_gui = LaunchConfiguration("with_gz_gui").perform(context)
@@ -35,6 +36,7 @@ def _startup_logs(context, *_args, **_kwargs):
     return [
         LogInfo(msg=f"[sim] backend -> {backend}"),
         LogInfo(msg=f"[sim] world_file -> {world_file}"),
+        LogInfo(msg=f"[sim] robot_structure_xacro -> {robot_structure_xacro}"),
         LogInfo(msg=f"[sim] with_moveit -> {with_moveit}"),
         LogInfo(msg=f"[sim] with_rviz -> {with_rviz}"),
         LogInfo(msg=f"[sim] with_gz_gui -> {with_gz_gui}"),
@@ -81,7 +83,7 @@ def _maybe_spawn_controllers(context, spawn_robot, *_args, **_kwargs):
         return [
             LogInfo(
                 msg="[sim] controller spawning -> disabled; "
-                "expect the Gazebo ros2_control plugin/controller_manager to load and activate controllers."
+                "expect the sim ros2_control plugin/controller_manager to load and activate controllers."
             )
         ]
 
@@ -138,6 +140,9 @@ def generate_launch_description():
             " ",
             "controllers_file:=",
             controllers_file,
+            " ",
+            "robot_structure_xacro:=",
+            LaunchConfiguration("robot_structure_xacro"),
         ]
     )
 
@@ -224,6 +229,11 @@ def generate_launch_description():
                 description="Spawn Z offset in meters.",
             ),
             DeclareLaunchArgument(
+                "robot_structure_xacro",
+                default_value=str(defaults.get("robot_structure_xacro", "dual_nero_column_only.xacro")),
+                description="URDF xacro filename under dual_nero_description/urdf used as the dual-arm structure.",
+            ),
+            DeclareLaunchArgument(
                 "use_sim_time",
                 default_value=str(defaults.get("use_sim_time", True)).lower(),
                 description="Whether to use Gazebo /clock.",
@@ -246,7 +256,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "spawn_sim_controllers",
                 default_value=str(defaults.get("spawn_sim_controllers", False)).lower(),
-                description="Whether to manually spawn sim controllers after model creation. Default false because gz_ros2_control already activates them in the current sim path.",
+                description="Whether to manually spawn sim controllers after model creation. Default false because the sim ros2_control plugin should activate them in the current path.",
             ),
             DeclareLaunchArgument(
                 "sim_control_hardware_plugin",
@@ -260,8 +270,8 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "sim_control_system_plugin_name",
-                default_value=str(defaults.get("sim_control_system_plugin_name", "gz_ros2_control::GazeboSimROS2ControlPlugin")),
-                description="Gazebo system plugin class name used to host ros2_control in ign gazebo.",
+                default_value=str(defaults.get("sim_control_system_plugin_name", "ign_ros2_control")),
+                description="Gazebo plugin instance name used to host ros2_control in ign gazebo.",
             ),
             DeclareLaunchArgument(
                 "sim_control_system_plugin_path",
