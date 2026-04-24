@@ -260,17 +260,17 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "sim_control_hardware_plugin",
-                default_value=str(defaults.get("sim_control_hardware_plugin", "ign_ros2_control/IgnitionSystem")),
+                default_value=str(defaults.get("sim_control_hardware_plugin", "gz_ros2_control/GazeboSimSystem")),
                 description="ros2_control hardware plugin used by the sim robot description.",
             ),
             DeclareLaunchArgument(
                 "sim_control_system_plugin",
-                default_value=str(defaults.get("sim_control_system_plugin", "libign_ros2_control-system.so")),
+                default_value=str(defaults.get("sim_control_system_plugin", "libgz_ros2_control-system.so")),
                 description="Gazebo system plugin library used to host ros2_control in ign gazebo.",
             ),
             DeclareLaunchArgument(
                 "sim_control_system_plugin_name",
-                default_value=str(defaults.get("sim_control_system_plugin_name", "ign_ros2_control")),
+                default_value=str(defaults.get("sim_control_system_plugin_name", "gz_ros2_control::GazeboSimROS2ControlPlugin")),
                 description="Gazebo plugin instance name used to host ros2_control in ign gazebo.",
             ),
             DeclareLaunchArgument(

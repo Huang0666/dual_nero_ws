@@ -9,7 +9,7 @@ simulation:
   robot_name: dual_nero
   z_offset: 0.0
   robot_structure_xacro: dual_nero_column_only.xacro
-  sim_control_hardware_plugin: ign_ros2_control/IgnitionSystem
-  sim_control_system_plugin: libign_ros2_control-system.so
-  sim_control_system_plugin_name: ign_ros2_control
+  sim_control_hardware_plugin: gz_ros2_control/GazeboSimSystem
+  sim_control_system_plugin: libgz_ros2_control-system.so
+  sim_control_system_plugin_name: gz_ros2_control::GazeboSimROS2ControlPlugin
   sim_control_system_plugin_path: /opt/ros/humble/lib
