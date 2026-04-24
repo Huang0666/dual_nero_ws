@@ -313,10 +313,16 @@ def generate_launch_description():
             OpaqueFunction(function=_maybe_spawn_controllers, args=[spawn_robot]),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(move_group_launch),
+                launch_arguments={
+                    "use_sim_time": LaunchConfiguration("use_sim_time"),
+                }.items(),
                 condition=IfCondition(LaunchConfiguration("with_moveit")),
             ),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(rviz_launch),
+                launch_arguments={
+                    "use_sim_time": LaunchConfiguration("use_sim_time"),
+                }.items(),
                 condition=IfCondition(LaunchConfiguration("with_rviz")),
             ),
         ]
