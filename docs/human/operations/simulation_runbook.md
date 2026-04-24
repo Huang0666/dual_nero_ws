@@ -9,7 +9,7 @@
 - 真机成果保留，但真机暂不作为主开发环境
 - 当前后续开发主线切到 `Gazebo Harmonic / gz sim`
 - 当前默认采用 server-only 启动，优先保证 `controller_manager`、`/joint_states`、`FollowJointTrajectory` 和任务入口稳定可用
-- `P4` 基线仿真链已验证通过；`P5` 的最新 scene / 插件链改动仍待 Linux 回归确认
+- `P4` 基线仿真链已验证通过；`P5-Sim v1` 运行侧主链已完成回归
 
 ## 当前正式入口
 
@@ -39,11 +39,12 @@ ros2 launch dual_nero_bringup simulation.launch.py
 - `P4` 基线验证通过时，默认由 sim ros2_control/controller_manager 自己加载并激活 controller
 - `simulation.launch.py` 中的手动 controller `spawner` 仅保留为回退开关，不再默认触发
 
-当前新候选路径：
+本轮已落地的仿真链修复：
 
-- 已把仿真控制插件链从 `gz_ros2_control` 切向 `ign_ros2_control`
-- 目的：匹配当前 `ROS 2 Humble + ign gazebo` 组合
-- 这条新路径尚未最终验收，必须先看 Linux 回归结果
+- 统一 `simulation.yaml` 与仿真 URDF/xacro 默认插件参数到 `gz_ros2_control`
+- 修正 `controller_manager_name`（去掉前导 `/`），避免 Gazebo 插件创建节点时报 `InvalidNodeNameError`
+- 在 `simulation.launch.py` 中显式向 `move_group` / `rviz` 注入 `use_sim_time`
+- 回归结果：controller 可加载、`/joint_states` 正常、MoveIt `Plan & Execute` 可执行
 
 如某些环境确实没有自动激活 controller，可显式打开回退路径：
 
@@ -72,7 +73,7 @@ ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync --target safe
 先重新编译并 source：
 
 ```bash
-cd ~/wkw_ws/dual_nero_ws_test/dual_nero_ws
+cd ~/dual_nero_ws_project/dual_nero_ws
 colcon build --packages-select dual_nero_bridge dual_nero_bringup dual_nero_moveit_config
 source install/setup.bash
 ```
@@ -93,7 +94,7 @@ ros2 launch dual_nero_bringup simulation.launch.py
 再开新终端验证：
 
 ```bash
-source ~/wkw_ws/dual_nero_ws_test/dual_nero_ws/install/setup.bash
+source ~/dual_nero_ws_project/dual_nero_ws/install/setup.bash
 ros2 control list_controllers
 ```
 
@@ -108,8 +109,8 @@ ros2 control list_controllers
 ```bash
 ros2 run dual_nero_bridge run_dual_arm_task \
   --task dual_stage_demo \
-  --task-config ~/wkw_ws/dual_nero_ws_test/dual_nero_ws/install/dual_nero_bridge/share/dual_nero_bridge/config/p5_tasks.yaml \
-  --scene-config ~/wkw_ws/dual_nero_ws_test/dual_nero_ws/install/dual_nero_bridge/share/dual_nero_bridge/config/p5_scene_sim.yaml
+  --task-config ~/dual_nero_ws_project/dual_nero_ws/install/dual_nero_bridge/share/dual_nero_bridge/config/p5_tasks.yaml \
+  --scene-config ~/dual_nero_ws_project/dual_nero_ws/install/dual_nero_bridge/share/dual_nero_bridge/config/p5_scene_sim.yaml
 ```
 
 ## 当前已验证通过
@@ -121,11 +122,31 @@ ros2 run dual_nero_bridge run_dual_arm_task \
 - `/joint_states` 已开始发布
 - `ros2 action list | grep follow_joint_trajectory` 已返回左右臂 action
 - `ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync` 已完成 prep / return 全流程
+- `ros2 param get /move_group use_sim_time` 已修复为 `True`
+- MoveIt RViz `Plan & Execute` 已恢复可执行
 
 注意：
 
-- 上面“已验证通过”针对的是 `P4` 基线仿真链。
-- `dual_stage_demo`、`sim_static_demo` 以及最新 `ign_ros2_control` 插件链还不在这个“已验证通过”集合里。
+- 上面“已验证通过”覆盖 `P4` 基线执行链与 `P5-Sim v1` 的运行时稳定性修复。
+- `sim_static_demo` 几何贴合仍允许后续继续微调，但不影响当前执行链结论。
+
+## 本轮故障复盘（2026-04-24）
+
+1. 现象：Gazebo 插件加载失败，controller 未激活。  
+   原因：仿真插件默认值在不同文件间不一致（`gz` / `ign` 混用）。  
+   修复：统一 `simulation.yaml`、`dual_nero_description.urdf.xacro`、`dual_nero_description.ros2_control.xacro` 为 `gz_ros2_control` 默认值。
+
+2. 现象：`ros2_control` 在 Gazebo 中崩溃，提示 `Invalid node name '/controller_manager'`。  
+   原因：`controller_manager_name` 带前导 `/`。  
+   修复：改为 `controller_manager`（无前导斜杠）。
+
+3. 现象：MoveIt 可以规划但 Execute 失败，日志提示“未在 1 秒内收到最新 joint state 时间戳”。  
+   原因：`move_group use_sim_time=false`，与 `/clock` 仿真时间域不一致。  
+   修复：在 `simulation.launch.py` 向 `move_group`/`rviz` 子 launch 强制注入 `use_sim_time=true`。
+
+4. 现象：`ros2 node list`/`ros2 topic echo` 报 `xmlrpc.client.Fault: !rclpy.ok()`。  
+   原因：`ros2cli daemon` 异常。  
+   修复：`ros2 daemon stop && pkill -f _ros2_daemon && export ROS2CLI_DISABLE_DAEMON=1` 后恢复。
 
 ## 复用边界
 

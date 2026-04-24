@@ -2,21 +2,17 @@
 
 ## 当前阶段
 
-- 当前阶段：`P5-Sim 第一版实施阶段`
+- 当前阶段：`P5-Sim 第一版收口验收阶段`
 - P1、P2、P3 主体已完成
 - `P4-A` 已完成，`P4-B` 延期
 
-## 优先级 A：启动 P5-Sim
+## 优先级 A：收口 P5-Sim v1
 
-- 先把 `run_dual_arm_task` 升级为 P5 多 stage task schema
-- 接着收口最小 execution mode：`sync / serial_left_first / serial_right_first`
-- 补最小失败策略：`abort / return_safe`
-- 再接静态 Planning Scene 能力验证场景
-- 全程维持当前任务入口和 controller 合同不变
-- 当前最先要做的不是继续扩功能，而是回归确认最新改动：
-  - `ign_ros2_control` 插件链是否真正恢复 controller
-  - `sim_static_demo` 坐标是否贴合当前 URDF
-  - `dual_stage_demo` 是否能完整跑通
+- 保持当前任务入口和 controller 合同不变
+- 固化本轮修复后的稳定启动路径（插件默认值、`use_sim_time`、controller 激活）
+- 跑通并留档 `dual_stage_demo` 的完整回归记录
+- 微调 `sim_static_demo` 坐标贴合当前 URDF（只做几何贴合，不扩展功能边界）
+- 更新验收文档，形成“P5-Sim v1 已实施完成”的可追溯结论
 - 当前边界入口：[architecture_layers.md](architecture_layers.md)
 - 当前实施入口：[../phases/p5/README.md](../phases/p5/README.md)
 

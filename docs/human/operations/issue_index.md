@@ -23,3 +23,7 @@
 | bridge 仅支持单点 trajectory | 当前不是 native plugin，`FollowJointTrajectory` 仅支持单点目标 | [P1 驱动合同](../phases/p1/driver_contract.md) / [P2 设计说明](../phases/p2/preflight_design.md) | [P2 设计说明](../phases/p2/preflight_design.md) |
 | MoveIt 原生 `ExecuteTrajectory` 与 bridge 单点合同不兼容 | MoveIt 默认输出多点轨迹，当前原生执行会触发 `CONTROL_FAILED` | [P3-B 验证报告](../phases/p3/moveit_validation_report.md) | [P3-B 验证计划](../phases/p3/moveit_validation_plan.md) |
 | MoveIt 速度/加速度限位缺少厂家真值 | 当前已补保守占位值，但还不是正式动力学参数 | [P3-B 验证报告](../phases/p3/moveit_validation_report.md) | [P3-B 验证报告](../phases/p3/moveit_validation_report.md) |
+| 仿真插件默认值漂移（`gz` / `ign` 混用） | 不同配置文件默认插件不一致，会导致 `Failed to load system plugin` 或 controller 不激活 | [P5-Sim README](../phases/p5/README.md) | [仿真运行手册](simulation_runbook.md) |
+| `controller_manager_name` 前导 `/` | Gazebo 中 `ros2_control` 会抛 `InvalidNodeNameError('/controller_manager')` 并中断加载 | [P5-Sim README](../phases/p5/README.md) | [仿真运行手册](simulation_runbook.md) |
+| `move_group use_sim_time=false` 导致 Execute 失败 | 可规划但执行前校验失败，日志提示未收到“最近时间戳”的 joint state | [P5-Sim README](../phases/p5/README.md) | [仿真运行手册](simulation_runbook.md) |
+| `ros2cli daemon` 异常 (`!rclpy.ok()`) | `ros2 node/topic` 命令可能报 xmlrpc fault，误判为主链故障 | [P5-Sim README](../phases/p5/README.md) | [仿真运行手册](simulation_runbook.md) |

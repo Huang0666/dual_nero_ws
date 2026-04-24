@@ -8,7 +8,7 @@
   - P3-A：故障恢复 SOP 已落地。
   - P3-B：MoveIt 主路径已完成现场验证。
   - P3-C：USB-CAN 固定命名保持暂缓。
-- 当前项目处于 `P5-Sim 第一版实施阶段`。
+- 当前项目处于 `P5-Sim 第一版收口验收阶段`。
 - 真机成果保留，但后续开发主线已切到 `Gazebo Harmonic / gz sim` 仿真。
 - 仿真后端已验证打通：
   - `controller_manager`
@@ -21,20 +21,22 @@
 
 - `P4-A 仿真执行链`：已完成
 - `P4-B 真机固定场景闭环`：延期，等待工位与模型对齐
-- `P5-Sim`：第一版实施中
+- `P5-Sim`：第一版实施已完成，进入收口验收
 
 补充说明：
 
 - 上面“仿真后端已验证打通”指的是 `P4` 基线仿真链已验证通过。
-- 本轮 `P5` 新改动已引入：
+- 本轮 `P5` 新改动已落地：
   - 多 stage task schema
   - 静态 scene profile
   - `Planning Scene` 注入代码
-  - `ign_ros2_control` 插件链切换
-- 这些新增改动在 Linux 上仍待回归确认。用户最近一次验证时看到：
-  - `Failed to load system plugin [libgz_ros2_control-system.so]`
-  - `ros2 control list_controllers` 返回 `No controllers are currently loaded!`
-- 因此当前不能把最新 `P5` 场景链和最新插件链视为“已验证通过”。
+  - 仿真插件参数与 `use_sim_time` 传递修复
+- 本轮已完成 Linux 回归确认：
+  - `gz_ros2_control` 插件可加载
+  - `controller_manager` 与三类 controller 可激活
+  - `/clock`、`/joint_states` 正常发布
+  - `run_dual_arm_task --task dual_prep_sync` 成功
+  - MoveIt RViz `Plan & Execute` 已恢复执行
 
 ## 当前正式可交付路径
 
@@ -76,13 +78,13 @@
 
 ### P5-Sim
 
-- 已具备启动前提，且当前已进入第一版实施：
+- 第一版实施已完成，且与当前运行时修复不冲突：
   - P4 仿真执行链打通
   - MoveIt / controller / task 入口合同稳定
   - 已形成 [../phases/p5/README.md](../phases/p5/README.md) 作为实施边界文档
-  - 已开始把 `run_dual_arm_task` 从 P4 固定结构升级到 P5 多 stage 结构
-  - 已补上静态 scene profile 与 Planning Scene 注入代码骨架，待 Linux 仿真回归验证
-  - 已尝试切换到 `ign_ros2_control` 插件链，待 Linux 回归验证 controller 是否恢复
+  - `run_dual_arm_task` 已从 P4 固定结构升级到 P5 多 stage 结构
+  - 静态 scene profile 与 `Planning Scene` 注入已可用
+  - 本轮修复仅作用于“仿真运行时稳定性”（插件默认值、controller 名称、sim time 传递），不改变 P5 的 task schema / stage 语义 / failure policy
 
 ## 当前阶段卡点
 
@@ -94,9 +96,9 @@
 
 ## 当前最高优先级
 
-1. 先完成 `P5-Sim` 最新改动的 Linux 回归验证：controller 恢复、`dual_stage_demo` 跑通、scene 坐标贴合
+1. 完成 `P5-Sim v1` 收口验收：`dual_stage_demo` 全流程、`sim_static_demo` 几何微调、验收记录归档
 2. 保留 `P4-B` 真机部分，等待工位与模型对齐恢复
-3. 把后续能力按阶段挂到 `P6 / P7 / P8`，避免重新塞回 P5
+3. 按阶段推进 `P6 / P7 / P8`，避免把后续增强项重新塞回 P5
 
 ## 当前风险
 

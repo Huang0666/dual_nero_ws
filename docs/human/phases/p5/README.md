@@ -137,27 +137,27 @@ P5-Sim 第一版完成时，至少要满足：
 4. 不改现有 joint / group / controller / action 合同
 5. 静态场景只作为能力验证场景，不作为真机安全结论来源
 
-## 当前未完成的回归确认
+## 本轮回归结论（2026-04-24）
 
-本轮代码已新增：
+本轮围绕 `P5-Sim v1` 的运行时问题完成了 Linux 侧回归，结论如下：
 
-- 多 stage task schema
-- `p5_tasks.yaml`
-- `sim_static_demo` 场景
-- `Planning Scene` 注入
-- 仿真 ros2_control 插件链切到 `ign_ros2_control`
+- `simulation.launch.py` 默认仿真插件链已统一到 `gz_ros2_control`
+- `controller_manager_name` 前导 `/` 已修正，避免 `InvalidNodeNameError('/controller_manager')`
+- `move_group` / `rviz` 的 `use_sim_time` 已在 bringup 层强制注入
+- `controller_manager`、`joint_state_broadcaster`、`left/right_arm_controller` 可激活
+- `/clock`、`/joint_states` 正常发布
+- `run_dual_arm_task --task dual_prep_sync` 与 MoveIt RViz `Plan & Execute` 均可执行
 
-但这些仍未形成 Linux 侧最终通过结论。最近一次用户验证显示：
+说明：
 
-- `ros2 launch dual_nero_bringup simulation.launch.py` 日志出现 `Failed to load system plugin [libgz_ros2_control-system.so]`
-- `ros2 control list_controllers` 返回 `No controllers are currently loaded!`
-- 因此 `dual_stage_demo` 还不能算已验收通过
+- 上述修复属于“运行时稳定性修复”，不改变 P5 的 task schema、stage 语义、`sync/serial` 语义和失败策略语义。
+- 因此，这些改动与 `P5-Sim v1` 已有实施内容不冲突。
 
-新窗口继续工作时，优先级应是：
+当前收口任务只剩：
 
-1. 先恢复 controller
-2. 再验证 `dual_stage_demo`
-3. 最后再继续扩大 P5 功能面
+1. 形成 `dual_stage_demo` 的完整验收记录
+2. 继续微调 `sim_static_demo` 的几何贴合
+3. 完成文档收口后转入 P6 进入条件
 
 ## 本阶段明确后移的内容
 
@@ -179,9 +179,9 @@ P5-Sim 第一版完成时，至少要满足：
 - 更复杂抓取与现场任务闭环
 - 更高强度的真实工位安全结论
 
-## 当前需要后续确认的关键问题
+## 当前已确认的关键口径
 
-1. P5 第一版是否只做 `P5-Sim`
-2. 是否继续沿用 `run_dual_arm_task` 作为正式入口
-3. P5 配置文件是否独立成 `p5_tasks.yaml`
-4. 第一版 scene 是否只先做静态 YAML
+1. P5 第一版只做 `P5-Sim` 的可重复最小闭环
+2. 继续沿用 `run_dual_arm_task` 作为正式入口
+3. P5 配置文件独立为 `p5_tasks.yaml`
+4. 第一版 scene 先做静态 YAML，动态障碍物后移到 P7
