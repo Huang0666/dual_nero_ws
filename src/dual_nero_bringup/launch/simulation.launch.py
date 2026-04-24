@@ -2,12 +2,12 @@ from pathlib import Path
 
 import yaml
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, LogInfo, OpaqueFunction, RegisterEventHandler, SetEnvironmentVariable, TimerAction
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, GroupAction, IncludeLaunchDescription, LogInfo, OpaqueFunction, RegisterEventHandler, SetEnvironmentVariable, TimerAction
 from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, EnvironmentVariable, LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
 from launch.substitutions import FindExecutable
 
@@ -311,19 +311,29 @@ def generate_launch_description():
             robot_state_publisher,
             spawn_robot,
             OpaqueFunction(function=_maybe_spawn_controllers, args=[spawn_robot]),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(move_group_launch),
-                launch_arguments={
-                    "use_sim_time": LaunchConfiguration("use_sim_time"),
-                }.items(),
+            GroupAction(
                 condition=IfCondition(LaunchConfiguration("with_moveit")),
+                actions=[
+                    SetParameter(name="use_sim_time", value=LaunchConfiguration("use_sim_time")),
+                    IncludeLaunchDescription(
+                        PythonLaunchDescriptionSource(move_group_launch),
+                        launch_arguments={
+                            "use_sim_time": LaunchConfiguration("use_sim_time"),
+                        }.items(),
+                    ),
+                ],
             ),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(rviz_launch),
-                launch_arguments={
-                    "use_sim_time": LaunchConfiguration("use_sim_time"),
-                }.items(),
+            GroupAction(
                 condition=IfCondition(LaunchConfiguration("with_rviz")),
+                actions=[
+                    SetParameter(name="use_sim_time", value=LaunchConfiguration("use_sim_time")),
+                    IncludeLaunchDescription(
+                        PythonLaunchDescriptionSource(rviz_launch),
+                        launch_arguments={
+                            "use_sim_time": LaunchConfiguration("use_sim_time"),
+                        }.items(),
+                    ),
+                ],
             ),
         ]
     )
