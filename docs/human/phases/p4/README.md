@@ -73,6 +73,19 @@ ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync
 ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync --target safe
 ```
 
+P4-B 最小闭环验收入口（真机，待工位与模型对齐恢复后执行）：
+
+```bash
+ros2 run dual_nero_bridge run_p4b_acceptance --task dual_prep_sync --cycles 3
+```
+
+该入口只表示验收工具已准备好，不表示 `P4-B` 真机闭环已经完成。现场工位与模型对齐恢复后，它会按 cycle 自动执行：
+
+- `dual_prep_sync` 全流程（prep -> return）
+- `safe` 回位
+- return/safe 检查点偏差统计
+- safe 点位重复性统计
+
 仿真主线入口：
 
 - [../../operations/simulation_runbook.md](../../operations/simulation_runbook.md)

@@ -127,6 +127,12 @@ ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync
 ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync --target safe
 ```
 
+P4-B 最小闭环验收入口（待工位与模型对齐恢复后执行）：
+
+```bash
+ros2 run dual_nero_bridge run_p4b_acceptance --task dual_prep_sync --cycles 3
+```
+
 ## 成功标准
 
 - 左右臂单测均 `rc=0`

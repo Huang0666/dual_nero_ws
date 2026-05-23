@@ -84,6 +84,7 @@
 
 - `run_dual_arm_task --task dual_prep_sync`
 - `run_dual_arm_task --task dual_prep_sync --target safe`
+- 工位与模型对齐恢复后：`run_p4b_acceptance --task dual_prep_sync --cycles 3`
 
 这时再做的动作验证，才是在验证正式任务，而不是盲试点位。
 

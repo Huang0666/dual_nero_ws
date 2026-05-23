@@ -36,7 +36,7 @@
 
 ```bash
 source /opt/ros/humble/setup.bash
-cd ~/wkw_ws/dual_nero_ws_test/dual_nero_ws
+cd ~/dual_nero_ws_project/dual_nero_ws
 source install/setup.bash
 ```
 

@@ -16,6 +16,7 @@
 - 双臂 `dual_arms` 规划 -> 分裂左右臂执行 的软件链路已建立
 - 已支持通过正式入口回固定安全位：`--target safe`
 - 已修正执行等待与 cleanup 的主要工程问题
+- 已新增 P4-B 最小闭环验收入口：`run_p4b_acceptance`（待工位与模型对齐恢复后执行）
 - 已在 server-only `gz sim` 中验证：
   - controller 链可激活
   - `/joint_states` 可发布

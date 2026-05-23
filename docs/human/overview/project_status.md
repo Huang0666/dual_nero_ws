@@ -41,6 +41,7 @@
 ## 当前正式可交付路径
 
 - 真机正式任务入口：`ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync`
+- P4-B 真机验收入口（待工位与模型对齐恢复后执行）：`ros2 run dual_nero_bridge run_p4b_acceptance --task dual_prep_sync --cycles 3`
 - 仿真正式入口：`ros2 launch dual_nero_bringup simulation.launch.py`
 - 仿真默认模式：server-only `gz sim`，优先保证控制器链和任务入口可用
 
@@ -73,6 +74,7 @@
 - 正式任务入口 CLI 已落地
 - `p4_tasks.yaml` 已固化
 - `--target safe` 已支持
+- P4-B 最小闭环验收入口 `run_p4b_acceptance` 已准备好，但仍待真实工位与模型对齐后执行
 - 结果等待与 cleanup 的工程问题已修正
 - 仿真后端已验证可用，`dual_prep_sync` 的 prep / return 已在仿真中执行成功
 

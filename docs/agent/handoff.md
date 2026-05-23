@@ -12,12 +12,13 @@
 - bridge 路线仍为正式上层合同
 - P4 正式任务入口已落地：`run_dual_arm_task`
 - 已支持 `--target safe` 回固定安全位
+- P4-B 最小闭环验收入口已准备：`run_p4b_acceptance --task dual_prep_sync --cycles 3`，待工位与模型对齐恢复后执行
 - 当前后续开发主线已切到 gz sim 仿真层
 - 仿真后端已验证可用，`dual_prep_sync` 已在仿真中执行成功
 - 当前阶段口径：
   - `P4-A` 已完成
   - `P4-B` 延期
-  - `P5-Sim` 第一版实施中
+  - `P5-Sim` 第一版实施完成，收口验收中
 
 ## 本轮新增并已完成 Linux 回归验证
 
@@ -50,10 +51,27 @@
 
 ## 下一步
 
-- 先完成 `dual_stage_demo` 结果留档和 `sim_static_demo` 几何微调
+- 先完成 `dual_stage_demo` 结果留档和 `sim_static_demo` 几何微调，形成 P5-Sim v1 收口记录
 - 同时把 P6 进入条件固定在 `docs/human/phases/p6/README.md`
 - 把动态障碍物 / 复杂调度 / 复杂真机验收挂到 `docs/human/phases/p7/README.md` 和 `docs/human/phases/p8/README.md`
 - 再等工位与模型对齐恢复 P4-B 真机工作
+- 工位恢复后使用 `run_p4b_acceptance --task dual_prep_sync --cycles 3` 留档 P4-B 最小闭环验收结果
+
+## 执行块规则
+
+- 后续任务按最低 `1 小时` 的执行块推进。
+- 5 分钟心跳只检查状态；如果当前执行块仍在进行中，不启动下一块。
+- 执行块结束时必须留下产物或阻塞结论。
+- 当前 `P5-Sim-01 仿真基线复核` 已在 Windows shell 尝试启动，但 `ros2`、`colcon`、`gz` 不可用；WSL 仅有 stopped 的 `docker-desktop`，因此阻塞在运行环境。
+- 在切换到可用 Linux ROS 2 / Gazebo 环境前，不启动 `P5-Sim-02`。
+- 当前执行顺序：
+  1. `P5-Sim-01 仿真基线复核`
+  2. `P5-Sim-02 dual_stage_demo 全流程验收`
+  3. `P5-Sim-03 sim_static_demo 几何贴合`
+  4. `P5-Sim-04 收口文档固化`
+  5. `P6-Plan-01 视觉与简单抓取进入条件`
+  6. `P4B-Real-01 真机最小闭环验收`（等待现场恢复）
+- 导航 / 建图暂不进入当前执行块；后续应单独建阶段承接移动底盘、SLAM、Nav2。
 
 ## 新窗口立即执行的最小验证
 

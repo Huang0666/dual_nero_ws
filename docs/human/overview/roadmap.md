@@ -21,7 +21,7 @@
 
 - `P4-A 仿真执行链`：已完成
 - `P4-B 真机固定场景闭环`：延期
-- `P5-Sim`：现在启动
+- `P5-Sim`：第一版实施完成，收口验收中
 - `P5-Real`：后置到真实工位恢复之后
 - `P6`：当前先做规划，不立即实现
 
@@ -57,13 +57,12 @@
 
 - [../phases/p5/README.md](../phases/p5/README.md)
 
-当前优先做：
+当前优先做（收口）：
 
-- `P5-Sim`
-- 多 stage task schema
-- 静态 Planning Scene
-- 最小协同执行语义
-- 最小失败回退策略
+- `dual_stage_demo` 全流程回归留档
+- `sim_static_demo` 几何贴合微调
+- 保持多 stage task schema / scene profile / 协同语义合同稳定
+- 在不改上层合同的前提下巩固仿真运行时启动链
 
 暂不直接展开：
 

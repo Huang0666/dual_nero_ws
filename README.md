@@ -14,8 +14,9 @@
 - P1：已完成
 - P2：已完成并通过现场验收
 - 当前执行架构：bridge（未切 native `ros2_control` 上层合同）
-- 当前阶段：P4 双臂固定场景任务闭环
+- 当前阶段：P5-Sim 第一版收口验收阶段
 - 当前后续开发主线：Gazebo / gz sim 仿真
+- 当前仿真执行链：`controller_manager` / `/joint_states` / `FollowJointTrajectory` / `dual_prep_sync` / RViz `Plan & Execute` 已验证可用
 
 ## 文档入口
 
@@ -41,7 +42,7 @@ ros2 launch dual_nero_bringup real_hardware.launch.py
 ros2 launch dual_nero_bringup simulation.launch.py
 ```
 
-## P4 双臂正式任务入口
+## 标准任务入口（P4 基线任务）
 
 ```bash
 ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync

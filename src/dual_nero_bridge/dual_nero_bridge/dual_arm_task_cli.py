@@ -215,6 +215,10 @@ class DualArmTaskClient(Node):
             plan_service=self.plan_service_name,
         )
 
+    def read_current_positions(self) -> list[float]:
+        """Return current group joint positions in task joint order."""
+        return self._wait_for_current_positions()
+
     def plan_to_positions(
         self,
         *,

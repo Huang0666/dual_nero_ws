@@ -24,7 +24,7 @@
 
   <rect x="70" y="150" width="1460" height="74" rx="18" fill="#eef6ff" stroke="#b8d5ff"/>
   <text x="100" y="182" class="label">当前阶段判断</text>
-  <text x="100" y="208" class="body">P4-A 仿真执行链已完成；P4-B 真机固定场景闭环延期；当前可以直接启动 P5-Sim，但 P5-Real / P6-Real 的最终安全结论仍依赖真实工位。</text>
+  <text x="100" y="208" class="body">P4-A 仿真执行链已完成；P4-B 真机固定场景闭环延期；当前处于 P5-Sim 第一版收口验收阶段，P5-Real / P6-Real 的最终安全结论仍依赖真实工位。</text>
 
   <text x="70" y="270" class="section">阶段主线</text>
 
@@ -46,7 +46,7 @@
 
   <rect x="790" y="296" width="310" height="176" rx="22" fill="#fff8df" stroke="#e7cb73" stroke-width="2"/>
   <text x="814" y="328" class="label">P5-Sim 双臂协同阶段</text>
-  <text x="814" y="354" class="statusProg">状态：现在启动</text>
+  <text x="814" y="354" class="statusProg">状态：收口验收中</text>
   <text x="814" y="382" class="body">- 静态障碍物 / Planning Scene</text>
   <text x="814" y="406" class="body">- 多 stage task schema</text>
   <text x="814" y="430" class="body">- sync / serial 执行语义</text>

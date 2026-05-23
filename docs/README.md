@@ -25,6 +25,7 @@
 - 仿真手册：[human/operations/simulation_runbook.md](human/operations/simulation_runbook.md)
 - 工位对齐：[human/operations/hardware_alignment_checklist.md](human/operations/hardware_alignment_checklist.md)
 - P4 定义：[human/phases/p4/README.md](human/phases/p4/README.md)
+- P5 定义：[human/phases/p5/README.md](human/phases/p5/README.md)
 
 ### 如果你是 agent
 

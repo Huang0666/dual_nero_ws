@@ -10,7 +10,7 @@
 
 - 日期：2026-04-12
 - 操作人：现场终端 `hrs`
-- 工作区：`~/wkw_ws/dual_nero_ws_test/dual_nero_ws`
+- 工作区：`~/dual_nero_ws_project/dual_nero_ws`
 - ROS 发行版：Humble
 - 启动模式：
   - 动作模式：`allow_motion:=true enable_on_start:=true`

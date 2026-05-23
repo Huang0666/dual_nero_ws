@@ -6,7 +6,7 @@
 
 - P2 preflight 稳定化已验收完成
 - P3 主体已完成（P3-C 暂缓）
-- 当前进入 P4：双臂固定场景任务闭环
+- 当前项目处于 `P5-Sim 第一版收口验收阶段`；`P4-B` 真机固定场景闭环仍延期，等待工位与模型对齐。
 
 P3-A 当前正式文档：
 
@@ -73,3 +73,16 @@ ros2 run dual_nero_bridge run_dual_arm_task --task dual_prep_sync
 任务配置：
 
 - `config/p4_tasks.yaml`
+
+## P4-B 最小闭环验收入口
+
+```bash
+ros2 run dual_nero_bridge run_p4b_acceptance --task dual_prep_sync --cycles 3
+```
+
+该入口用于现场恢复后的真机验收，不表示 `P4-B` 已完成。它会按 cycle 自动执行：
+
+- `dual_prep_sync` 全流程（prep -> return）
+- `safe` 回位
+- return/safe 检查点偏差统计
+- safe 点位重复性（max spread）统计
